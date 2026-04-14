@@ -50,6 +50,66 @@ export type Database = {
         }
         Relationships: []
       }
+      invoices: {
+        Row: {
+          amount: number
+          client_id: string | null
+          created_at: string
+          description: string | null
+          due_date: string
+          id: string
+          invoice_no: string
+          issue_date: string
+          project_id: string | null
+          status: Database["public"]["Enums"]["invoice_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          client_id?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string
+          id?: string
+          invoice_no: string
+          issue_date?: string
+          project_id?: string | null
+          status?: Database["public"]["Enums"]["invoice_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          client_id?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string
+          id?: string
+          invoice_no?: string
+          issue_date?: string
+          project_id?: string | null
+          status?: Database["public"]["Enums"]["invoice_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           client_id: string | null
@@ -102,6 +162,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      invoice_status: "pending" | "paid" | "overdue"
       project_status: "taslak" | "aktif" | "faturalandı" | "ödendi"
       trust_score: "A" | "B" | "C"
     }
@@ -231,6 +292,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      invoice_status: ["pending", "paid", "overdue"],
       project_status: ["taslak", "aktif", "faturalandı", "ödendi"],
       trust_score: ["A", "B", "C"],
     },
