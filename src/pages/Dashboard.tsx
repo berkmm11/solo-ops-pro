@@ -23,6 +23,7 @@ const sabitKalemler = [
   { icon: Calculator, label: "Muhasebeci", amount: 3_000 },
 ];
 
+const harcanabilir = currencies[0].safe;
 const barTotal = harcanabilir + kdv + stopaj + sabitGiderler;
 const segments = [
   { label: "Harcanabilir", amount: harcanabilir, color: "bg-emerald-500" },
@@ -38,6 +39,8 @@ const stats = [
 
 const Dashboard = () => {
   const [giderOpen, setGiderOpen] = useState(false);
+  const [activeCurrency, setActiveCurrency] = useState(0);
+  const active = currencies[activeCurrency];
 
   return (
     <AppLayout>
@@ -49,11 +52,31 @@ const Dashboard = () => {
           <p className="text-sm font-medium opacity-90 tracking-wide uppercase">
             Harcanabilir Bakiye
           </p>
-          <p className="text-5xl md:text-6xl font-bold mt-3 tracking-tight">
-            ₺{fmt(harcanabilir)}
+          <p
+            key={activeCurrency}
+            className="text-5xl md:text-6xl font-bold mt-3 tracking-tight animate-[fadeIn_0.3s_ease-in-out]"
+          >
+            {active.symbol}{fmt(active.safe)}
           </p>
+          <div className="flex items-center justify-center gap-2 mt-4">
+            {currencies.map((c, i) => (
+              <button
+                key={c.code}
+                onClick={() => setActiveCurrency(i)}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                  i === activeCurrency
+                    ? "bg-white text-emerald-700"
+                    : "bg-white/20 text-white hover:bg-white/30"
+                }`}
+              >
+                {c.symbol}{fmt(c.safe)}
+              </button>
+            ))}
+          </div>
           <p className="text-sm opacity-75 mt-3">
             Gönül rahatlığıyla harcayabileceğin tutar
+          </p>
+          <p className="text-xs opacity-50 mt-1">Anlık kurlarla hesaplandı</p>
           </p>
         </div>
 
