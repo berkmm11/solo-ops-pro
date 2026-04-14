@@ -240,13 +240,20 @@ const Dashboard = () => {
     return `(${parts.join(" + ")}${tryEquiv} ayrıca bekliyor)`;
   }, [pendingForeign, foreignInTRY]);
 
-  // Foreign paid subtitle for hero
-  const paidForeignSubtitle = useMemo(() => {
-    const parts = Object.entries(paidForeign).map(([c, amt]) => fmtMoney(amt, c as Currency));
-    if (parts.length === 0) return null;
-    const tryEquiv = paidForeignInTRY > 0 ? ` ≈ ₺${fmt(paidForeignInTRY)}` : "";
-    return `${parts.join(" + ")}${tryEquiv} dahil`;
-  }, [paidForeign, paidForeignInTRY]);
+  // Foreign paid details for hero — show each currency separately
+  const paidForeignDetails = useMemo(() => {
+    return Object.entries(paidForeign).map(([c, amt]) => {
+      const tryEquiv = rates
+        ? c === "USD" ? amt * rates.USD
+        : c === "EUR" ? amt * rates.EUR
+        : 0
+        : 0;
+      return {
+        label: fmtMoney(amt, c as Currency),
+        tryEquiv: tryEquiv > 0 ? `≈ ₺${fmt(tryEquiv)}` : null,
+      };
+    });
+  }, [paidForeign, rates]);
 
   const statCards = [
     { title: "Toplam Alacak (₺)", icon: HandCoins, value: `₺${fmt(totalAlacakTRY)}` },
