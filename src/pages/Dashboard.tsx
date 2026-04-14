@@ -1,7 +1,9 @@
 import { useState } from "react";
 import AppLayout from "@/components/AppLayout";
 import { Card, CardContent } from "@/components/ui/card";
-import { Receipt, Landmark, Building2, Wifi, Monitor, Calculator, ChevronDown, ChevronUp, Wallet, HandCoins, TrendingUp, FolderKanban } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Receipt, Landmark, Building2, Wifi, Monitor, Calculator, ChevronDown, ChevronUp, Wallet, HandCoins, TrendingUp, FolderKanban, FileText } from "lucide-react";
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 
 const fmt = (n: number) =>
   n.toLocaleString("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
