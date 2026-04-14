@@ -1,4 +1,5 @@
 import { useState } from "react";
+import EmptyState from "@/components/EmptyState";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -135,14 +136,14 @@ const Clients = () => {
         {isLoading ? (
           <p className="mt-8 text-sm text-muted-foreground">Yükleniyor…</p>
         ) : clients.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-center">
-            <Users className="h-12 w-12 text-muted-foreground/50 mb-4" />
-            <h2 className="text-lg font-medium text-foreground">Henüz müşteri yok</h2>
-            <p className="text-sm text-muted-foreground mt-1 max-w-sm">
-              Müşterilerinizi ekleyerek projelerinizi ve faturalarınızı kolayca yönetin.
-            </p>
-            <Button className="mt-6" onClick={openNew}>Müşteri Ekle</Button>
-          </div>
+          <EmptyState
+            icon={Users}
+            emoji="👥"
+            title="Müşteri listeniz boş"
+            description="İlk müşterinizi ekleyin ve projelerinizi onlara bağlayın."
+            actionLabel="Müşteri Ekle"
+            onAction={openNew}
+          />
         ) : (
           <div className="mt-6 border border-border rounded-md">
             <Table>

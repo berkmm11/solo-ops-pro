@@ -1,4 +1,5 @@
 import { useState } from "react";
+import EmptyState from "@/components/EmptyState";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
@@ -178,17 +179,14 @@ const Projects = () => {
         {isLoading ? (
           <p className="mt-8 text-sm text-muted-foreground">Yükleniyor…</p>
         ) : filtered.length === 0 && filter === "all" && projects.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-center">
-            <FolderKanban className="h-12 w-12 text-muted-foreground/50 mb-4" />
-            <h2 className="text-lg font-medium text-foreground">Henüz proje yok</h2>
-            <p className="text-sm text-muted-foreground mt-1 max-w-sm">
-              İlk projeni ekleyerek başla.
-            </p>
-            <Button className="mt-6" onClick={openNew}>
-              <Plus className="mr-2 h-4 w-4" />
-              İlk Projemi Ekle
-            </Button>
-          </div>
+          <EmptyState
+            icon={FolderKanban}
+            emoji="📁"
+            title="Henüz proje yok"
+            description="Yeni bir proje ekleyerek müşterilerinizi ve işlerinizi takip etmeye başlayın."
+            actionLabel="Yeni Proje Ekle"
+            onAction={openNew}
+          />
         ) : filtered.length === 0 ? (
           <p className="mt-8 text-sm text-muted-foreground text-center">Bu filtreye uygun proje yok.</p>
         ) : (
