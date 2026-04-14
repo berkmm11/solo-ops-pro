@@ -39,6 +39,35 @@ const stats = [
   { title: "Aktif Projeler", icon: FolderKanban },
 ];
 
+// Project status mock data
+const mockProjects = [
+  { id: 1, name: "Acme Corp Web Sitesi", client: "Acme Corp", budget: 45000, currency: "TRY", status: "in_progress", dueDate: "2026-05-01" },
+  { id: 2, name: "Beta Logo Tasarım", client: "Beta Ltd", budget: 12000, currency: "TRY", status: "completed", dueDate: "2026-04-10" },
+  { id: 3, name: "Gamma App UI/UX", client: "Gamma Inc", budget: 2500, currency: "USD", status: "invoiced", dueDate: "2026-03-28" },
+  { id: 4, name: "Delta İçerik Yazımı", client: "Delta Co", budget: 8000, currency: "TRY", status: "paid", dueDate: "2026-03-15" },
+  { id: 5, name: "Epsilon SEO Projesi", client: "Epsilon Ltd", budget: 15000, currency: "TRY", status: "overdue", dueDate: "2026-03-20" },
+  { id: 6, name: "Zeta Marka Stratejisi", client: "Zeta AŞ", budget: 20000, currency: "TRY", status: "in_progress", dueDate: "2026-05-15" },
+];
+
+const projectStatusConfig: Record<string, { label: string; color: string; dotClass: string }> = {
+  in_progress: { label: "Devam Ediyor", color: "#3B82F6", dotClass: "bg-blue-500" },
+  completed:   { label: "Tamamlandı",   color: "#F59E0B", dotClass: "bg-amber-500" },
+  invoiced:    { label: "Faturalandı",  color: "#8B5CF6", dotClass: "bg-violet-500" },
+  paid:        { label: "Ödendi",       color: "#10B981", dotClass: "bg-emerald-500" },
+  overdue:     { label: "Gecikmiş",     color: "#EF4444", dotClass: "bg-red-500" },
+};
+
+const donutData = Object.entries(
+  mockProjects.reduce<Record<string, number>>((acc, p) => {
+    acc[p.status] = (acc[p.status] || 0) + 1;
+    return acc;
+  }, {})
+).map(([status, count]) => ({
+  name: projectStatusConfig[status].label,
+  value: count,
+  color: projectStatusConfig[status].color,
+}));
+
 const Dashboard = () => {
   const [giderOpen, setGiderOpen] = useState(false);
   const [activeCurrency, setActiveCurrency] = useState(0);
