@@ -240,13 +240,20 @@ const Dashboard = () => {
     return `(${parts.join(" + ")}${tryEquiv} ayrıca bekliyor)`;
   }, [pendingForeign, foreignInTRY]);
 
-  // Foreign paid subtitle for hero
-  const paidForeignSubtitle = useMemo(() => {
-    const parts = Object.entries(paidForeign).map(([c, amt]) => fmtMoney(amt, c as Currency));
-    if (parts.length === 0) return null;
-    const tryEquiv = paidForeignInTRY > 0 ? ` ≈ ₺${fmt(paidForeignInTRY)}` : "";
-    return `${parts.join(" + ")}${tryEquiv} dahil`;
-  }, [paidForeign, paidForeignInTRY]);
+  // Foreign paid details for hero — show each currency separately
+  const paidForeignDetails = useMemo(() => {
+    return Object.entries(paidForeign).map(([c, amt]) => {
+      const tryEquiv = rates
+        ? c === "USD" ? amt * rates.USD
+        : c === "EUR" ? amt * rates.EUR
+        : 0
+        : 0;
+      return {
+        label: fmtMoney(amt, c as Currency),
+        tryEquiv: tryEquiv > 0 ? `≈ ₺${fmt(tryEquiv)}` : null,
+      };
+    });
+  }, [paidForeign, rates]);
 
   const statCards = [
     { title: "Toplam Alacak (₺)", icon: HandCoins, value: `₺${fmt(totalAlacakTRY)}` },
@@ -291,8 +298,14 @@ const Dashboard = () => {
               <p className="text-5xl md:text-6xl font-bold mt-3 tracking-tight">
                 ₺{fmt(toplamKazanc)}
               </p>
-              {paidForeignSubtitle && (
-                <p className="text-sm opacity-75 mt-2">{paidForeignSubtitle}</p>
+              {paidForeignDetails.length > 0 && (
+                <div className="mt-2 space-y-0.5">
+                  {paidForeignDetails.map((d, i) => (
+                    <p key={i} className="text-sm opacity-75">
+                      {d.label} {d.tryEquiv && <span className="opacity-80">{d.tryEquiv}</span>} dahil
+                    </p>
+                  ))}
+                </div>
               )}
               {foreignSubtitle && (
                 <p className="text-sm opacity-75 mt-1">{foreignSubtitle}</p>
