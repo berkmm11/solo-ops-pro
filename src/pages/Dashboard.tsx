@@ -220,6 +220,9 @@ const Dashboard = () => {
               <p className="text-5xl md:text-6xl font-bold mt-3 tracking-tight">
                 ₺{fmt(harcanabilir)}
               </p>
+              {foreignSubtitle && (
+                <p className="text-sm opacity-75 mt-2">{foreignSubtitle}</p>
+              )}
               <p className="text-sm opacity-75 mt-3">
                 Gönül rahatlığıyla harcayabileceğin tutar
               </p>
@@ -373,7 +376,7 @@ const Dashboard = () => {
                       {filteredProjects.map((p) => {
                         const sc = projectStatusConfig[p.status] || { label: p.status, color: "#9CA3AF", dotClass: "bg-gray-400" };
                         const clientName = (p as any).clients?.name || "—";
-                        const price = p.price != null ? `₺${fmt(p.price)}` : "—";
+                        const price = p.price != null ? fmtMoney(p.price, ((p as any).currency || "TRY") as Currency) : "—";
                         return (
                           <div
                             key={p.id}
