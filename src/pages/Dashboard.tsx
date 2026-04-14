@@ -7,11 +7,14 @@ const fmt = (n: number) =>
   n.toLocaleString("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
 // Mock data
-const toplam = 127_500;
+const currencies = [
+  { code: "TRY", symbol: "₺", total: 127_500, safe: 67_000 },
+  { code: "USD", symbol: "$", total: 4_200, safe: 2_850 },
+  { code: "EUR", symbol: "€", total: 3_100, safe: 2_200 },
+];
 const kdv = 21_250;
 const stopaj = 21_250;
 const sabitGiderler = 18_000;
-const harcanabilir = 67_000;
 
 const sabitKalemler = [
   { icon: Building2, label: "Kira", amount: 10_000 },
