@@ -209,7 +209,12 @@ const InvoiceDetail = () => {
       </div>
 
       {invoice.status === "overdue" && (
-        <AiReminderSection invoiceId={invoice.id} />
+        <AiReminderSection
+          invoiceId={invoice.id}
+          invoiceNo={invoice.invoice_no}
+          clientPhone={client?.phone || null}
+          clientEmail={client?.email || null}
+        />
       )}
     </AppLayout>
   );
