@@ -52,7 +52,6 @@ serve(async (req) => {
     }
 
     // ── Fetch full database context ──
-    const userId = user.id;
 
     const [clientsRes, projectsRes, invoicesRes, expensesRes] = await Promise.all([
       supabase.from("clients").select("id, name, trust_score").eq("user_id", userId),
