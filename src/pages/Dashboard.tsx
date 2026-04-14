@@ -432,7 +432,7 @@ const Dashboard = () => {
                               innerRadius={55} outerRadius={80}
                               dataKey="value"
                               startAngle={90} endAngle={-270}
-                              animationBegin={0} animationDuration={800}
+                              isAnimationActive={false}
                               cursor="pointer"
                               onClick={(_: any, index: number) => toggleFilter(donutData[index].status)}
                             >
