@@ -13,6 +13,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Currency, fmtMoney } from "@/lib/currency";
+import { useExchangeRates } from "@/hooks/useExchangeRates";
+import ExchangeRateBar from "@/components/ExchangeRateBar";
 
 const fmt = (n: number) =>
   n.toLocaleString("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
@@ -38,6 +40,7 @@ const Dashboard = () => {
   const queryClient = useQueryClient();
   const [giderOpen, setGiderOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const { data: rates, isLoading: ratesLoading } = useExchangeRates();
 
   // ── Fetch real data ──
   const { data: projects = [], isLoading: projLoading } = useQuery({
@@ -144,6 +147,17 @@ const Dashboard = () => {
     [expenses]
   );
 
+  // Convert foreign pending to TRY using live rates
+  const foreignInTRY = useMemo(() => {
+    if (!rates) return 0;
+    let total = 0;
+    Object.entries(pendingForeign).forEach(([c, amt]) => {
+      if (c === "USD") total += amt * rates.USD;
+      else if (c === "EUR") total += amt * rates.EUR;
+    });
+    return total;
+  }, [pendingForeign, rates]);
+
   const harcanabilir = Math.max(0, toplamGelirTRY - toplamGider - sabitGiderler);
   const kdv = toplamGelirTRY * 0.2;
   const stopaj = toplamGelirTRY * 0.2;
@@ -183,13 +197,16 @@ const Dashboard = () => {
     queryClient.invalidateQueries({ queryKey: ["dashboard-projects"] });
     queryClient.invalidateQueries({ queryKey: ["dashboard-invoices"] });
     queryClient.invalidateQueries({ queryKey: ["dashboard-expenses"] });
+    queryClient.invalidateQueries({ queryKey: ["exchange-rates"] });
     toast.success("Veriler güncelleniyor...");
   };
 
   const foreignSubtitle = useMemo(() => {
     const parts = Object.entries(pendingForeign).map(([c, amt]) => fmtMoney(amt, c as Currency));
-    return parts.length > 0 ? `(${parts.join(" + ")} ayrıca bekliyor)` : null;
-  }, [pendingForeign]);
+    if (parts.length === 0) return null;
+    const tryEquiv = foreignInTRY > 0 ? ` ≈ ₺${fmt(foreignInTRY)}` : "";
+    return `(${parts.join(" + ")}${tryEquiv} ayrıca bekliyor)`;
+  }, [pendingForeign, foreignInTRY]);
 
   const statCards = [
     { title: "Toplam Alacak (₺)", icon: HandCoins, value: `₺${fmt(totalAlacakTRY)}` },
@@ -201,8 +218,13 @@ const Dashboard = () => {
     <AppLayout>
       <div className="space-y-6">
         {/* Header with refresh */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
+            <div className="mt-1">
+              <ExchangeRateBar rates={rates} isLoading={ratesLoading} />
+            </div>
+          </div>
           <Button variant="ghost" size="icon" onClick={handleRefresh} title="Yenile">
             <RefreshCw className="h-4 w-4" />
           </Button>
