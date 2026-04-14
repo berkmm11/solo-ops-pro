@@ -14,9 +14,10 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
-import { FileDown, Pencil, ChevronRight, Send, MessageCircle, Mail, Copy, User, Building2, Phone, AtSign } from "lucide-react";
+import { FileDown, Pencil, ChevronRight, Send, MessageCircle, Mail, Copy, User, Building2, Phone, AtSign, Palette } from "lucide-react";
 import { cn } from "@/lib/utils";
 import AiReminderSection from "@/components/AiReminderSection";
+import InvoiceTemplateCustomizer from "@/components/InvoiceTemplateCustomizer";
 import { toast } from "sonner";
 
 type InvoiceStatus = "pending" | "paid" | "overdue";
@@ -38,6 +39,10 @@ const InvoiceDetail = () => {
   const { profile } = useProfile();
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [paymentMsg, setPaymentMsg] = useState("");
+  const [templateOpen, setTemplateOpen] = useState(false);
+  const [templateConfig, setTemplateConfig] = useState<any>(
+    (profile as any)?.invoice_template_config || null
+  );
 
   const { data: invoice, isLoading } = useQuery({
     queryKey: ["invoice", id],
@@ -137,6 +142,11 @@ const InvoiceDetail = () => {
                 Ödeme Bilgileri Gönder
               </Button>
             )}
+            <Button size="sm" variant="outline" onClick={() => setTemplateOpen(true)}>
+              <Palette className="mr-2 h-4 w-4" />
+              Şablon Özelleştir
+              <span className="ml-1 text-[10px] bg-primary/10 text-primary px-1 py-0.5 rounded font-medium">Business ✨</span>
+            </Button>
             <Button size="sm" onClick={() => window.print()}>
               <FileDown className="mr-2 h-4 w-4" />
               PDF İndir
@@ -179,11 +189,17 @@ const InvoiceDetail = () => {
       {/* ── INVOICE DOCUMENT ── */}
       <div
         className="max-w-[800px] mx-auto bg-white border border-[#d1d5db] rounded print:border-none print:rounded-none print:shadow-none print:max-w-none print:p-0"
-        style={{ fontFamily: "Arial, Helvetica, sans-serif", color: "#111" }}
+        style={{ fontFamily: "Arial, Helvetica, sans-serif", color: templateConfig?.accentColor || "#111" }}
       >
         <div className="p-10 print:p-8">
+          {/* Template header image */}
+          {templateConfig?.headerImageUrl && (
+            <div className="mb-6 -mx-10 -mt-10 print:-mx-8 print:-mt-8">
+              <img src={templateConfig.headerImageUrl} alt="" className="w-full h-20 object-cover rounded-t" />
+            </div>
+          )}
           {/* HEADER */}
-          <div className="flex justify-between items-start border-b-2 border-[#111] pb-6 mb-8">
+          <div className="flex justify-between items-start border-b-2 pb-6 mb-8" style={{ borderColor: templateConfig?.accentColor || "#111" }}>
             <div className="text-sm leading-relaxed">
               <p className="text-base font-bold mb-1">
                 {profile?.full_name || user?.email || "—"}
