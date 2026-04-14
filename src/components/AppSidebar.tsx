@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, FolderKanban, FileText, Receipt, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, FolderKanban, FileText, Receipt, LogOut, Settings } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -22,6 +22,7 @@ const navItems = [
   { title: "Projeler", url: "/projects", icon: FolderKanban },
   { title: "Faturalar", url: "/invoices", icon: FileText },
   { title: "Giderler", url: "/expenses", icon: Receipt },
+  { title: "Ayarlar", url: "/settings", icon: Settings },
 ];
 
 export function AppSidebar() {

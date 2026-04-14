@@ -15,6 +15,7 @@ import Invoices from "@/pages/Invoices";
 import InvoiceDetail from "@/pages/InvoiceDetail";
 import Expenses from "@/pages/Expenses";
 import PayInvoice from "@/pages/PayInvoice";
+import Settings from "@/pages/Settings";
 import Onboarding from "@/pages/Onboarding";
 import NotFound from "@/pages/NotFound";
 
@@ -38,6 +39,7 @@ const App = () => (
               <Route path="/invoices" element={<ProtectedRoute><Invoices /></ProtectedRoute>} />
               <Route path="/fatura/:id" element={<ProtectedRoute><InvoiceDetail /></ProtectedRoute>} />
               <Route path="/expenses" element={<ProtectedRoute><Expenses /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/pay/:id" element={<PayInvoice />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
