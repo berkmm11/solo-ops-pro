@@ -96,6 +96,7 @@ const Projects = () => {
         price: values.price ? parseFloat(values.price) : null,
         deadline: values.deadline ? format(values.deadline, "yyyy-MM-dd") : null,
         status: values.status,
+        currency: values.currency,
       };
       if (editing) {
         const { error } = await supabase.from("projects").update(payload).eq("id", editing.id);
@@ -209,10 +210,10 @@ const Projects = () => {
                     </Badge>
                   </div>
                   <h3 className="text-lg font-semibold text-foreground mt-2">{p.title}</h3>
-                  <div className="flex items-center justify-between mt-3 text-sm text-muted-foreground">
-                    <span className="font-medium text-foreground">{formatPrice(p.price)}</span>
-                    <span>{formatDate(p.deadline)}</span>
-                  </div>
+                    <div className="flex items-center justify-between mt-3 text-sm text-muted-foreground">
+                      <span className="font-medium text-foreground">{formatPrice(p.price, ((p as any).currency || "TRY") as Currency)}</span>
+                      <span>{formatDate(p.deadline)}</span>
+                    </div>
                 </div>
               );
             })}
