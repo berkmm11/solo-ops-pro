@@ -66,8 +66,8 @@ const Projects = () => {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Project | null>(null);
-  const [form, setForm] = useState(emptyForm);
   const [filter, setFilter] = useState("all");
+  const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
 
   const { data: projects = [], isLoading } = useQuery({
     queryKey: ["projects"],
@@ -117,6 +117,23 @@ const Projects = () => {
       closeModal();
     },
     onError: () => toast.error("Bir hata oluştu"),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (projectId: string) => {
+      // Delete linked invoices first
+      await supabase.from("invoices").delete().eq("project_id", projectId);
+      const { error } = await supabase.from("projects").delete().eq("id", projectId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-projects"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-invoices"] });
+      toast.success("Proje silindi");
+      setDeleteTarget(null);
+    },
+    onError: () => toast.error("Silme sırasında hata oluştu"),
   });
 
   const openNew = () => {
