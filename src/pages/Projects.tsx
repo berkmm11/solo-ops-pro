@@ -128,11 +128,13 @@ const Projects = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-projects"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-invoices"] });
-      toast.success("Proje silindi");
       setDeleteTarget(null);
+      toast.success("Proje silindi");
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["projects"] });
+        queryClient.invalidateQueries({ queryKey: ["dashboard-projects"] });
+        queryClient.invalidateQueries({ queryKey: ["dashboard-invoices"] });
+      }, 150);
     },
     onError: () => toast.error("Silme sırasında hata oluştu"),
   });
