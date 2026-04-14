@@ -1,7 +1,9 @@
 import { useState } from "react";
 import AppLayout from "@/components/AppLayout";
 import { Card, CardContent } from "@/components/ui/card";
-import { Receipt, Landmark, Building2, Wifi, Monitor, Calculator, ChevronDown, ChevronUp, Wallet, HandCoins, TrendingUp, FolderKanban } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Receipt, Landmark, Building2, Wifi, Monitor, Calculator, ChevronDown, ChevronUp, Wallet, HandCoins, TrendingUp, FolderKanban, FileText } from "lucide-react";
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 
 const fmt = (n: number) =>
   n.toLocaleString("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
@@ -36,6 +38,35 @@ const stats = [
   { title: "Bu Ay Kazanç", icon: TrendingUp },
   { title: "Aktif Projeler", icon: FolderKanban },
 ];
+
+// Project status mock data
+const mockProjects = [
+  { id: 1, name: "Acme Corp Web Sitesi", client: "Acme Corp", budget: 45000, currency: "TRY", status: "in_progress", dueDate: "2026-05-01" },
+  { id: 2, name: "Beta Logo Tasarım", client: "Beta Ltd", budget: 12000, currency: "TRY", status: "completed", dueDate: "2026-04-10" },
+  { id: 3, name: "Gamma App UI/UX", client: "Gamma Inc", budget: 2500, currency: "USD", status: "invoiced", dueDate: "2026-03-28" },
+  { id: 4, name: "Delta İçerik Yazımı", client: "Delta Co", budget: 8000, currency: "TRY", status: "paid", dueDate: "2026-03-15" },
+  { id: 5, name: "Epsilon SEO Projesi", client: "Epsilon Ltd", budget: 15000, currency: "TRY", status: "overdue", dueDate: "2026-03-20" },
+  { id: 6, name: "Zeta Marka Stratejisi", client: "Zeta AŞ", budget: 20000, currency: "TRY", status: "in_progress", dueDate: "2026-05-15" },
+];
+
+const projectStatusConfig: Record<string, { label: string; color: string; dotClass: string }> = {
+  in_progress: { label: "Devam Ediyor", color: "#3B82F6", dotClass: "bg-blue-500" },
+  completed:   { label: "Tamamlandı",   color: "#F59E0B", dotClass: "bg-amber-500" },
+  invoiced:    { label: "Faturalandı",  color: "#8B5CF6", dotClass: "bg-violet-500" },
+  paid:        { label: "Ödendi",       color: "#10B981", dotClass: "bg-emerald-500" },
+  overdue:     { label: "Gecikmiş",     color: "#EF4444", dotClass: "bg-red-500" },
+};
+
+const donutData = Object.entries(
+  mockProjects.reduce<Record<string, number>>((acc, p) => {
+    acc[p.status] = (acc[p.status] || 0) + 1;
+    return acc;
+  }, {})
+).map(([status, count]) => ({
+  name: projectStatusConfig[status].label,
+  value: count,
+  color: projectStatusConfig[status].color,
+}));
 
 const Dashboard = () => {
   const [giderOpen, setGiderOpen] = useState(false);
@@ -171,7 +202,89 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        {/* 4. Placeholder stat cards */}
+        {/* 4. Project Status Section */}
+        <Card className="border border-border rounded-xl shadow-sm">
+          <CardContent className="p-6">
+            <h2 className="text-lg font-semibold text-foreground mb-4">Proje Durumu</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Donut Chart */}
+              <div className="flex flex-col items-center">
+                <div className="relative w-48 h-48">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={donutData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={55}
+                        outerRadius={80}
+                        dataKey="value"
+                        startAngle={90}
+                        endAngle={-270}
+                        animationBegin={0}
+                        animationDuration={800}
+                      >
+                        {donutData.map((entry, i) => (
+                          <Cell key={i} fill={entry.color} stroke="none" />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-3xl font-bold text-foreground">{mockProjects.length}</span>
+                    <span className="text-xs text-muted-foreground">Proje</span>
+                  </div>
+                </div>
+                <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 mt-4">
+                  {donutData.map((d) => (
+                    <div key={d.name} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: d.color }} />
+                      {d.name} ({d.value})
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Project List */}
+              <div className="space-y-2">
+                {mockProjects.map((p) => {
+                  const sc = projectStatusConfig[p.status];
+                  const currSymbol = p.currency === "USD" ? "$" : p.currency === "EUR" ? "€" : "₺";
+                  return (
+                    <div
+                      key={p.id}
+                      className={`flex items-center gap-3 p-3 rounded-lg text-sm ${
+                        p.status === "overdue" ? "bg-red-50" : "hover:bg-accent/50"
+                      }`}
+                    >
+                      <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${sc.dotClass}`} />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-foreground truncate">{p.name}</p>
+                        <p className="text-xs text-muted-foreground">{p.client}</p>
+                      </div>
+                      <span className="font-medium text-foreground whitespace-nowrap">
+                        {currSymbol}{fmt(p.budget)}
+                      </span>
+                      {p.status === "completed" && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-xs ml-1"
+                          onClick={() => console.log("Fatura oluştur:", p.name)}
+                        >
+                          <FileText className="h-3 w-3 mr-1" />
+                          Fatura
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 5. Placeholder stat cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {stats.map((stat) => (
             <Card key={stat.title} className="border border-border shadow-none">
