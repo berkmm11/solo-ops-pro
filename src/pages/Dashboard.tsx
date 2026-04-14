@@ -63,6 +63,7 @@ const donutData = Object.entries(
     return acc;
   }, {})
 ).map(([status, count]) => ({
+  status,
   name: projectStatusConfig[status].label,
   value: count,
   color: projectStatusConfig[status].color,
