@@ -218,8 +218,13 @@ const Dashboard = () => {
     <AppLayout>
       <div className="space-y-6">
         {/* Header with refresh */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
+            <div className="mt-1">
+              <ExchangeRateBar rates={rates} isLoading={ratesLoading} />
+            </div>
+          </div>
           <Button variant="ghost" size="icon" onClick={handleRefresh} title="Yenile">
             <RefreshCw className="h-4 w-4" />
           </Button>
