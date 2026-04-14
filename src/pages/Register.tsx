@@ -113,6 +113,7 @@ const Register = () => {
                 required
               />
               <PasswordStrength password={password} />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Şifre Tekrar</Label>
               <PasswordInput
