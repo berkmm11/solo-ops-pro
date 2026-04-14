@@ -38,9 +38,9 @@ type Invoice = Tables<"invoices">;
 type InvoiceStatus = "pending" | "paid" | "overdue";
 
 const statusConfig: Record<InvoiceStatus, { label: string; bg: string; text: string }> = {
-  pending:  { label: "Bekleyen",  bg: "bg-[#F3F4F6]", text: "text-[#374151]" },
-  paid:     { label: "Ödendi",    bg: "bg-[#D1FAE5]", text: "text-[#065F46]" },
-  overdue:  { label: "Gecikmiş", bg: "bg-[#FEE2E2]", text: "text-[#991B1B]" },
+  pending:  { label: "Bekleyen",  bg: "bg-muted", text: "text-muted-foreground" },
+  paid:     { label: "Ödendi",    bg: "bg-emerald-100 dark:bg-emerald-900/30", text: "text-emerald-800 dark:text-emerald-300" },
+  overdue:  { label: "Gecikmiş", bg: "bg-red-100 dark:bg-red-900/30", text: "text-red-800 dark:text-red-300" },
 };
 
 const filters = [
@@ -257,7 +257,7 @@ const Invoices = () => {
           <div className="mt-6 border border-border rounded-md overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="bg-[#F9FAFB]">
+                <TableRow className="bg-muted/50">
                   <TableHead className="text-xs font-bold">Fatura No</TableHead>
                   <TableHead className="text-xs font-bold">Müşteri</TableHead>
                   <TableHead className="text-xs font-bold">Proje</TableHead>
@@ -271,7 +271,7 @@ const Invoices = () => {
                 {filtered.map((inv) => {
                   const sc = statusConfig[inv.status as InvoiceStatus];
                   return (
-                    <TableRow key={inv.id} className="hover:bg-[#F9FAFB] cursor-pointer border-b border-[#E5E7EB]" onClick={() => navigate(`/fatura/${inv.id}`)}>
+                    <TableRow key={inv.id} className="hover:bg-muted/50 cursor-pointer border-b border-border" onClick={() => navigate(`/fatura/${inv.id}`)}>
                       <TableCell className="font-medium text-sm">{inv.invoice_no}</TableCell>
                       <TableCell className="text-sm">{(inv as any).clients?.name || "—"}</TableCell>
                       <TableCell className="text-sm">{(inv as any).projects?.title || "—"}</TableCell>

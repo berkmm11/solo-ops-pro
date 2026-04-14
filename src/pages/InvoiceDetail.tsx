@@ -22,9 +22,9 @@ import { toast } from "sonner";
 type InvoiceStatus = "pending" | "paid" | "overdue";
 
 const statusConfig: Record<InvoiceStatus, { label: string; bg: string; text: string }> = {
-  pending: { label: "Bekleyen", bg: "bg-[#F3F4F6]", text: "text-[#374151]" },
-  paid: { label: "Ödendi", bg: "bg-[#D1FAE5]", text: "text-[#065F46]" },
-  overdue: { label: "Gecikmiş", bg: "bg-[#FEE2E2]", text: "text-[#991B1B]" },
+  pending: { label: "Bekleyen", bg: "bg-muted", text: "text-muted-foreground" },
+  paid: { label: "Ödendi", bg: "bg-emerald-100 dark:bg-emerald-900/30", text: "text-emerald-800 dark:text-emerald-300" },
+  overdue: { label: "Gecikmiş", bg: "bg-red-100 dark:bg-red-900/30", text: "text-red-800 dark:text-red-300" },
 };
 
 const fmt = (n: number) =>
