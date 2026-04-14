@@ -50,6 +50,39 @@ export type Database = {
         }
         Relationships: []
       }
+      expenses: {
+        Row: {
+          amount: number
+          category: Database["public"]["Enums"]["expense_category"]
+          created_at: string
+          expense_date: string
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          category?: Database["public"]["Enums"]["expense_category"]
+          created_at?: string
+          expense_date?: string
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: Database["public"]["Enums"]["expense_category"]
+          created_at?: string
+          expense_date?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       invoices: {
         Row: {
           amount: number
@@ -171,6 +204,7 @@ export type Database = {
       }
     }
     Enums: {
+      expense_category: "kira" | "vergi" | "abonelik" | "diger"
       invoice_status: "pending" | "paid" | "overdue"
       project_status: "taslak" | "aktif" | "faturalandı" | "ödendi"
       trust_score: "A" | "B" | "C"
@@ -301,6 +335,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      expense_category: ["kira", "vergi", "abonelik", "diger"],
       invoice_status: ["pending", "paid", "overdue"],
       project_status: ["taslak", "aktif", "faturalandı", "ödendi"],
       trust_score: ["A", "B", "C"],
