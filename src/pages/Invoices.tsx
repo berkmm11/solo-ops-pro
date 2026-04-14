@@ -334,7 +334,7 @@ const Invoices = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="amount">Tutar (₺)</Label>
+                <Label htmlFor="amount">Brüt Tutar (₺)</Label>
                 <Input
                   id="amount"
                   type="number"
@@ -344,6 +344,21 @@ const Invoices = () => {
                   onChange={(e) => setForm({ ...form, amount: e.target.value })}
                   placeholder="0,00"
                 />
+                {form.amount && parseFloat(form.amount) > 0 && (() => {
+                  const brut = parseFloat(form.amount);
+                  const kdv = brut * 0.2;
+                  const stopaj = brut * 0.2;
+                  const net = brut + kdv - stopaj;
+                  const fmt = (n: number) => n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " ₺";
+                  return (
+                    <div className="rounded-md border border-border bg-muted/50 p-3 space-y-1 text-sm">
+                      <div className="flex justify-between"><span className="text-muted-foreground">Brüt Tutar:</span><span className="font-medium">{fmt(brut)}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">KDV (%20):</span><span className="font-medium text-[#065F46]">+{fmt(kdv)}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Stopaj (%20):</span><span className="font-medium text-[#991B1B]">-{fmt(stopaj)}</span></div>
+                      <div className="flex justify-between border-t border-border pt-1"><span className="font-bold">Net Tutar:</span><span className="font-bold">{fmt(net)}</span></div>
+                    </div>
+                  );
+                })()}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
