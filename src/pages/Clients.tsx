@@ -43,10 +43,10 @@ const Clients = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("clients")
-        .select("*")
+        .select("*, projects(id)")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data as Client[];
+      return data;
     },
     enabled: !!user,
   });
