@@ -72,6 +72,7 @@ const emptyForm = {
 
 const Invoices = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
@@ -268,7 +269,7 @@ const Invoices = () => {
                 {filtered.map((inv) => {
                   const sc = statusConfig[inv.status as InvoiceStatus];
                   return (
-                    <TableRow key={inv.id} className="hover:bg-[#F9FAFB] cursor-pointer border-b border-[#E5E7EB]">
+                    <TableRow key={inv.id} className="hover:bg-[#F9FAFB] cursor-pointer border-b border-[#E5E7EB]" onClick={() => navigate(`/fatura/${inv.id}`)}>
                       <TableCell className="font-medium text-sm">{inv.invoice_no}</TableCell>
                       <TableCell className="text-sm">{(inv as any).clients?.name || "—"}</TableCell>
                       <TableCell className="text-sm">{(inv as any).projects?.title || "—"}</TableCell>
