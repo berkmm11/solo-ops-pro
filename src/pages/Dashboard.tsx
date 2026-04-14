@@ -297,10 +297,13 @@ const Dashboard = () => {
                 Toplam Kazanç
               </p>
               <p className="text-5xl md:text-6xl font-bold mt-3 tracking-tight">
-                {heroCurrency === "TRY" && `₺${fmt(toplamKazanc)}`}
-                {heroCurrency === "USD" && rates && `$${fmt(toplamKazanc / rates.USD)}`}
-                {heroCurrency === "EUR" && rates && `€${fmt(toplamKazanc / rates.EUR)}`}
-                {(heroCurrency !== "TRY" && !rates) && `₺${fmt(toplamKazanc)}`}
+                {heroCurrency === "TRY"
+                  ? `₺${fmt(toplamKazanc)}`
+                  : rates
+                    ? heroCurrency === "USD"
+                      ? `$${fmt(toplamKazanc / rates.USD)}`
+                      : `€${fmt(toplamKazanc / rates.EUR)}`
+                    : `₺${fmt(toplamKazanc)}`}
               </p>
               {/* Currency selector */}
               <div className="flex items-center justify-center gap-2 mt-4">
@@ -322,10 +325,13 @@ const Dashboard = () => {
                 <p className="text-sm opacity-75 mt-3">{foreignSubtitle}</p>
               )}
               <p className="text-sm opacity-75 mt-2">
-                Harcanabilir: {heroCurrency === "TRY" && `₺${fmt(harcanabilir)}`}
-                {heroCurrency === "USD" && rates && `$${fmt(harcanabilir / rates.USD)}`}
-                {heroCurrency === "EUR" && rates && `€${fmt(harcanabilir / rates.EUR)}`}
-                {(heroCurrency !== "TRY" && !rates) && `₺${fmt(harcanabilir)}`}
+                Harcanabilir: {heroCurrency === "TRY"
+                  ? `₺${fmt(harcanabilir)}`
+                  : rates
+                    ? heroCurrency === "USD"
+                      ? `$${fmt(harcanabilir / rates.USD)}`
+                      : `€${fmt(harcanabilir / rates.EUR)}`
+                    : `₺${fmt(harcanabilir)}`}
               </p>
             </div>
 
