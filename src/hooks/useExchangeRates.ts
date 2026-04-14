@@ -10,13 +10,12 @@ export interface ExchangeRates {
 
 const fetchRates = async (): Promise<ExchangeRates> => {
   try {
-    const res = await fetch("https://api.frankfurter.app/latest?from=USD&to=TRY");
-    if (!res.ok) throw new Error("API error");
-    const usdData = await res.json();
-
-    const res2 = await fetch("https://api.frankfurter.app/latest?from=EUR&to=TRY");
-    if (!res2.ok) throw new Error("API error");
-    const eurData = await res2.json();
+    const [resUsd, resEur] = await Promise.all([
+      fetch("https://api.frankfurter.dev/v1/latest?from=USD&to=TRY"),
+      fetch("https://api.frankfurter.dev/v1/latest?from=EUR&to=TRY"),
+    ]);
+    if (!resUsd.ok || !resEur.ok) throw new Error("API error");
+    const [usdData, eurData] = await Promise.all([resUsd.json(), resEur.json()]);
 
     const rates: ExchangeRates = {
       USD: usdData.rates.TRY,
