@@ -32,6 +32,7 @@ const Dashboard = () => {
   const queryClient = useQueryClient();
   const [giderOpen, setGiderOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [heroCurrency, setHeroCurrency] = useState<"TRY" | "USD" | "EUR">("TRY");
   const { data: rates, isLoading: ratesLoading } = useExchangeRates();
 
   // ── Fetch real data ──
@@ -296,29 +297,35 @@ const Dashboard = () => {
                 Toplam Kazanç
               </p>
               <p className="text-5xl md:text-6xl font-bold mt-3 tracking-tight">
-                ₺{fmt(toplamKazanc)}
+                {heroCurrency === "TRY" && `₺${fmt(toplamKazanc)}`}
+                {heroCurrency === "USD" && rates && `$${fmt(toplamKazanc / rates.USD)}`}
+                {heroCurrency === "EUR" && rates && `€${fmt(toplamKazanc / rates.EUR)}`}
+                {(heroCurrency !== "TRY" && !rates) && `₺${fmt(toplamKazanc)}`}
               </p>
-              {/* Show total in USD and EUR equivalents */}
-              {rates && toplamKazanc > 0 && (
-                <div className="flex items-center justify-center gap-4 mt-3">
-                  <span className="text-sm font-medium opacity-85 bg-white/15 rounded-full px-3 py-1">
-                    ${fmt(toplamKazanc / rates.USD)} USD
-                  </span>
-                  <span className="text-sm font-medium opacity-85 bg-white/15 rounded-full px-3 py-1">
-                    €{fmt(toplamKazanc / rates.EUR)} EUR
-                  </span>
-                </div>
-              )}
+              {/* Currency selector */}
+              <div className="flex items-center justify-center gap-2 mt-4">
+                {(["TRY", "USD", "EUR"] as const).map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => setHeroCurrency(c)}
+                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                      heroCurrency === c
+                        ? "bg-white text-emerald-600"
+                        : "bg-white/15 text-white hover:bg-white/25"
+                    }`}
+                  >
+                    {c === "TRY" ? "₺ TL" : c === "USD" ? "$ USD" : "€ EUR"}
+                  </button>
+                ))}
+              </div>
               {foreignSubtitle && (
-                <p className="text-sm opacity-75 mt-2">{foreignSubtitle}</p>
+                <p className="text-sm opacity-75 mt-3">{foreignSubtitle}</p>
               )}
-              <p className="text-sm opacity-75 mt-3">
-                Harcanabilir: ₺{fmt(harcanabilir)}
-                {rates && harcanabilir > 0 && (
-                  <span className="ml-1">
-                    (${fmt(harcanabilir / rates.USD)} · €{fmt(harcanabilir / rates.EUR)})
-                  </span>
-                )}
+              <p className="text-sm opacity-75 mt-2">
+                Harcanabilir: {heroCurrency === "TRY" && `₺${fmt(harcanabilir)}`}
+                {heroCurrency === "USD" && rates && `$${fmt(harcanabilir / rates.USD)}`}
+                {heroCurrency === "EUR" && rates && `€${fmt(harcanabilir / rates.EUR)}`}
+                {(heroCurrency !== "TRY" && !rates) && `₺${fmt(harcanabilir)}`}
               </p>
             </div>
 
