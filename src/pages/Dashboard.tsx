@@ -71,7 +71,15 @@ const donutData = Object.entries(
 const Dashboard = () => {
   const [giderOpen, setGiderOpen] = useState(false);
   const [activeCurrency, setActiveCurrency] = useState(0);
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const active = currencies[activeCurrency];
+
+  const toggleFilter = (status: string) =>
+    setStatusFilter((prev) => (prev === status ? null : status));
+
+  const filteredProjects = statusFilter
+    ? mockProjects.filter((p) => p.status === statusFilter)
+    : mockProjects;
 
   return (
     <AppLayout>
