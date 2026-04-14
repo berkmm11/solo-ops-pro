@@ -317,7 +317,7 @@ const Dashboard = () => {
                           variant="outline"
                           size="sm"
                           className="h-7 text-xs ml-1"
-                          onClick={() => console.log("Fatura oluştur:", p.name)}
+                          onClick={(e) => { e.stopPropagation(); setInvoiceModal(p); }}
                         >
                           <FileText className="h-3 w-3 mr-1" />
                           Fatura
@@ -345,6 +345,44 @@ const Dashboard = () => {
             </Card>
           ))}
         </div>
+
+        {/* Invoice Modal */}
+        <Dialog open={!!invoiceModal} onOpenChange={(open) => !open && setInvoiceModal(null)}>
+          <DialogContent className="sm:max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Fatura Oluştur</DialogTitle>
+            </DialogHeader>
+            {invoiceModal && (
+              <div className="space-y-4">
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Fatura No</span>
+                    <span className="font-mono font-medium text-foreground">{generateInvoiceNo()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Müşteri</span>
+                    <span className="font-medium text-foreground">{invoiceModal.client}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Proje</span>
+                    <span className="font-medium text-foreground">{invoiceModal.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Tutar</span>
+                    <span className="font-semibold text-foreground">
+                      {invoiceModal.currency === "USD" ? "$" : invoiceModal.currency === "EUR" ? "€" : "₺"}
+                      {fmt(invoiceModal.budget)}
+                    </span>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="ghost" onClick={() => setInvoiceModal(null)}>İptal</Button>
+                  <Button onClick={() => handleInvoice(invoiceModal)}>Faturayı Onayla</Button>
+                </DialogFooter>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   );
