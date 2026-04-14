@@ -1,6 +1,7 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import NotificationBell from "@/components/NotificationBell";
+import SoloCopilot from "@/components/SoloCopilot";
 
 const AppLayout = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -14,6 +15,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
           </header>
           <main className="flex-1 p-8">{children}</main>
         </div>
+        <SoloCopilot />
       </div>
     </SidebarProvider>
   );
