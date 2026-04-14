@@ -202,8 +202,10 @@ const Dashboard = () => {
 
   const foreignSubtitle = useMemo(() => {
     const parts = Object.entries(pendingForeign).map(([c, amt]) => fmtMoney(amt, c as Currency));
-    return parts.length > 0 ? `(${parts.join(" + ")} ayrıca bekliyor)` : null;
-  }, [pendingForeign]);
+    if (parts.length === 0) return null;
+    const tryEquiv = foreignInTRY > 0 ? ` ≈ ₺${fmt(foreignInTRY)}` : "";
+    return `(${parts.join(" + ")}${tryEquiv} ayrıca bekliyor)`;
+  }, [pendingForeign, foreignInTRY]);
 
   const statCards = [
     { title: "Toplam Alacak (₺)", icon: HandCoins, value: `₺${fmt(totalAlacakTRY)}` },
