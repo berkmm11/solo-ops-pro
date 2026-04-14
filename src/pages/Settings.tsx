@@ -11,8 +11,9 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Loader2, Upload, Save } from "lucide-react";
+import { Loader2, Upload, Save, Sparkles } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import LogoGeneratorDialog from "@/components/LogoGeneratorDialog";
 
 const specialties = [
   "Grafik Tasarım", "Yazılım", "Çevirmenlik", "Fotoğrafçılık",
@@ -38,6 +39,7 @@ const Settings = () => {
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [aiLogoOpen, setAiLogoOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -227,7 +229,7 @@ const Settings = () => {
                     {currentLogo ? (
                       <div className="flex flex-col items-center gap-2">
                         <img src={currentLogo} alt="Logo" className="h-16 w-16 object-contain rounded" />
-                        <p className="text-xs text-muted-foreground">Değiştirmek için tıkla</p>
+                    <p className="text-xs text-muted-foreground">Değiştirmek için tıkla</p>
                       </div>
                     ) : (
                       <div className="flex flex-col items-center gap-2 text-muted-foreground">
@@ -236,6 +238,19 @@ const Settings = () => {
                       </div>
                     )}
                   </div>
+                  {!currentLogo && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setAiLogoOpen(true)}
+                      className="w-full"
+                    >
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      AI ile Logo Oluştur
+                      <span className="ml-2 text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium">Business ✨</span>
+                    </Button>
+                   )}
                   <input
                     ref={fileRef}
                     type="file"
@@ -256,6 +271,21 @@ const Settings = () => {
               )}
             </Button>
           </>
+        )}
+
+        {user && (
+          <LogoGeneratorDialog
+            open={aiLogoOpen}
+            onOpenChange={setAiLogoOpen}
+            brandName={brandName || fullName}
+            specialty={specialty}
+            userId={user.id}
+            onLogoSelected={(url) => {
+              setLogoUrl(url);
+              setLogoFile(null);
+              setLogoPreview(null);
+            }}
+          />
         )}
       </div>
     </AppLayout>
