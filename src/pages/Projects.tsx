@@ -128,6 +128,7 @@ const Projects = () => {
       price: p.price != null ? String(p.price) : "",
       deadline: p.deadline ? new Date(p.deadline) : undefined,
       status: p.status as ProjectStatus,
+      currency: ((p as any).currency || "TRY") as Currency,
     });
     setOpen(true);
   };
