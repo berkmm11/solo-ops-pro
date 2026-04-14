@@ -77,7 +77,6 @@ const Dashboard = () => {
             Gönül rahatlığıyla harcayabileceğin tutar
           </p>
           <p className="text-xs opacity-50 mt-1">Anlık kurlarla hesaplandı</p>
-          </p>
         </div>
 
         {/* 2. Horizontal stacked bar */}
