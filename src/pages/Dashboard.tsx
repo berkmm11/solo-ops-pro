@@ -298,17 +298,19 @@ const Dashboard = () => {
               <p className="text-5xl md:text-6xl font-bold mt-3 tracking-tight">
                 ₺{fmt(toplamKazanc)}
               </p>
-              {paidForeignDetails.length > 0 && (
-                <div className="mt-2 space-y-0.5">
-                  {paidForeignDetails.map((d, i) => (
-                    <p key={i} className="text-sm opacity-75">
-                      {d.label} {d.tryEquiv && <span className="opacity-80">{d.tryEquiv}</span>} dahil
-                    </p>
-                  ))}
+              {/* Show total in USD and EUR equivalents */}
+              {rates && toplamKazanc > 0 && (
+                <div className="flex items-center justify-center gap-4 mt-3">
+                  <span className="text-sm font-medium opacity-85 bg-white/15 rounded-full px-3 py-1">
+                    ${fmt(toplamKazanc / rates.USD)} USD
+                  </span>
+                  <span className="text-sm font-medium opacity-85 bg-white/15 rounded-full px-3 py-1">
+                    €{fmt(toplamKazanc / rates.EUR)} EUR
+                  </span>
                 </div>
               )}
               {foreignSubtitle && (
-                <p className="text-sm opacity-75 mt-1">{foreignSubtitle}</p>
+                <p className="text-sm opacity-75 mt-2">{foreignSubtitle}</p>
               )}
               <p className="text-sm opacity-75 mt-3">
                 Harcanabilir: ₺{fmt(harcanabilir)}
