@@ -59,39 +59,6 @@ const PayInvoice = () => {
 
   useEffect(() => {
     if (!id) return;
-    const fetchData = async () => {
-      setLoading(true);
-      // Fetch invoice with related data (public access via RPC not needed for select — 
-      // we use the service role indirectly through a public-facing query)
-      const { data: inv, error: invErr } = await supabase
-        .from("invoices")
-        .select("id, invoice_no, amount, currency, due_date, status, description, projects(title), clients(name)")
-        .eq("id", id)
-        .maybeSingle();
-
-      if (invErr || !inv) {
-        setError("Fatura bulunamadı veya erişim yok.");
-        setLoading(false);
-        return;
-      }
-
-      // Fetch the freelancer's profile for IBAN
-      const { data: prof } = await supabase
-        .from("profiles")
-        .select("full_name, brand_name, iban, bank_name")
-        .eq("user_id", (inv as any).user_id)
-        .maybeSingle();
-
-      setInvoice(inv as any);
-      setProfile(prof);
-      setLoading(false);
-    };
-    fetchData();
-  }, [id]);
-
-  // We need user_id for profile fetch — let's adjust the query
-  useEffect(() => {
-    if (!id) return;
     const fetchAll = async () => {
       setLoading(true);
       const { data: inv, error: invErr } = await supabase
