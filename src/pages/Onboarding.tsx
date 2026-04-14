@@ -83,22 +83,20 @@ const Onboarding = () => {
         logoUrl = urlData.publicUrl;
       }
 
-      const updates: Record<string, any> = {
-        full_name: fullName.trim(),
-        phone: phone.trim(),
-        specialty,
-        tax_no: taxNo.trim(),
-        address: address.trim(),
-        iban: iban.replace(/\s/g, "").toUpperCase(),
-        bank_name: bankName.trim() || null,
-        brand_name: (skipStep3 ? fullName.trim() : brandName.trim()) || fullName.trim(),
-        onboarding_completed: true,
-      };
-      if (logoUrl) updates.logo_url = logoUrl;
-
       const { error } = await supabase
         .from("profiles")
-        .update(updates)
+        .update({
+          full_name: fullName.trim(),
+          phone: phone.trim(),
+          specialty,
+          tax_no: taxNo.trim(),
+          address: address.trim(),
+          iban: iban.replace(/\s/g, "").toUpperCase(),
+          bank_name: bankName.trim() || null,
+          brand_name: (skipStep3 ? fullName.trim() : brandName.trim()) || fullName.trim(),
+          onboarding_completed: true,
+          ...(logoUrl ? { logo_url: logoUrl } : {}),
+        })
         .eq("user_id", user.id);
 
       if (error) throw error;
