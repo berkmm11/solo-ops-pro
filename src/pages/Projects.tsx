@@ -252,16 +252,29 @@ const Projects = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="price">Fiyat (₺)</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={form.price}
-                  onChange={(e) => setForm({ ...form, price: e.target.value })}
-                  placeholder="0"
-                />
+                <Label htmlFor="price">Fiyat</Label>
+                <div className="flex gap-2">
+                  <Select value={form.currency} onValueChange={(v) => setForm({ ...form, currency: v as Currency })}>
+                    <SelectTrigger className="w-24">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {currencies.map((c) => (
+                        <SelectItem key={c} value={c}>{currencyConfig[c].label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    id="price"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.price}
+                    onChange={(e) => setForm({ ...form, price: e.target.value })}
+                    placeholder="0"
+                    className="flex-1"
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">
