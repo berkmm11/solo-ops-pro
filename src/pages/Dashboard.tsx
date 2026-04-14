@@ -54,7 +54,7 @@ const Dashboard = () => {
           </p>
           <p
             key={activeCurrency}
-            className="text-5xl md:text-6xl font-bold mt-3 tracking-tight animate-[fadeIn_0.3s_ease-in-out]"
+            className="text-5xl md:text-6xl font-bold mt-3 tracking-tight animate-fadeIn"
           >
             {active.symbol}{fmt(active.safe)}
           </p>
