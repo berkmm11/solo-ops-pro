@@ -197,6 +197,7 @@ const Dashboard = () => {
     queryClient.invalidateQueries({ queryKey: ["dashboard-projects"] });
     queryClient.invalidateQueries({ queryKey: ["dashboard-invoices"] });
     queryClient.invalidateQueries({ queryKey: ["dashboard-expenses"] });
+    queryClient.invalidateQueries({ queryKey: ["exchange-rates"] });
     toast.success("Veriler güncelleniyor...");
   };
 
