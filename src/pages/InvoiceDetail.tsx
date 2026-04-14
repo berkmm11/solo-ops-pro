@@ -349,6 +349,18 @@ const InvoiceDetail = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Invoice Template Customizer */}
+      {user && (
+        <InvoiceTemplateCustomizer
+          open={templateOpen}
+          onOpenChange={setTemplateOpen}
+          userId={user.id}
+          brandName={profile?.brand_name || profile?.full_name || ""}
+          currentConfig={templateConfig}
+          onConfigSaved={setTemplateConfig}
+        />
+      )}
     </AppLayout>
   );
 };
