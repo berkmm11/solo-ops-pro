@@ -223,9 +223,17 @@ const Projects = () => {
                 <div
                   key={p.id}
                   onClick={() => openEdit(p)}
-                  className="border border-border rounded-xl p-5 bg-background cursor-pointer transition-shadow hover:shadow-md"
+                  className="relative border border-border rounded-xl p-5 bg-background cursor-pointer transition-shadow hover:shadow-md"
                 >
-                  <div className="flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setDeleteTarget(p); }}
+                    className="absolute top-3 right-3 p-1.5 rounded-md text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                    title="Projeyi sil"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                  <div className="flex items-center justify-between pr-8">
                     <span className="text-sm text-muted-foreground">{clientName || "—"}</span>
                     <Badge variant="secondary" className={cn("text-xs font-medium", sc.bg, sc.text, "hover:" + sc.bg)}>
                       {sc.label}
