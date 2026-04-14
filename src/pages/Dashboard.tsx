@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { Receipt, Landmark, Building2, Wifi, Monitor, Calculator, ChevronDown, ChevronUp, Wallet, HandCoins, TrendingUp, FolderKanban, FileText } from "lucide-react";
+import { Receipt, Landmark, Building2, Wifi, Monitor, Calculator, ChevronDown, ChevronUp, Wallet, HandCoins, TrendingUp, FolderKanban, FileText, Link2, ExternalLink } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { toast } from "sonner";
 
