@@ -28,7 +28,7 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { FileText, Plus, CalendarIcon, MoreHorizontal, Pencil, Trash2, CheckCircle } from "lucide-react";
+import { FileText, Plus, CalendarIcon, MoreHorizontal, Pencil, Trash2, CheckCircle, Link2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
