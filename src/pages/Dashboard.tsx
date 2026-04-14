@@ -202,7 +202,89 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        {/* 4. Placeholder stat cards */}
+        {/* 4. Project Status Section */}
+        <Card className="border border-border rounded-xl shadow-sm">
+          <CardContent className="p-6">
+            <h2 className="text-lg font-semibold text-foreground mb-4">Proje Durumu</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Donut Chart */}
+              <div className="flex flex-col items-center">
+                <div className="relative w-48 h-48">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={donutData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={55}
+                        outerRadius={80}
+                        dataKey="value"
+                        startAngle={90}
+                        endAngle={-270}
+                        animationBegin={0}
+                        animationDuration={800}
+                      >
+                        {donutData.map((entry, i) => (
+                          <Cell key={i} fill={entry.color} stroke="none" />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-3xl font-bold text-foreground">{mockProjects.length}</span>
+                    <span className="text-xs text-muted-foreground">Proje</span>
+                  </div>
+                </div>
+                <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 mt-4">
+                  {donutData.map((d) => (
+                    <div key={d.name} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: d.color }} />
+                      {d.name} ({d.value})
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Project List */}
+              <div className="space-y-2">
+                {mockProjects.map((p) => {
+                  const sc = projectStatusConfig[p.status];
+                  const currSymbol = p.currency === "USD" ? "$" : p.currency === "EUR" ? "€" : "₺";
+                  return (
+                    <div
+                      key={p.id}
+                      className={`flex items-center gap-3 p-3 rounded-lg text-sm ${
+                        p.status === "overdue" ? "bg-red-50" : "hover:bg-accent/50"
+                      }`}
+                    >
+                      <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${sc.dotClass}`} />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-foreground truncate">{p.name}</p>
+                        <p className="text-xs text-muted-foreground">{p.client}</p>
+                      </div>
+                      <span className="font-medium text-foreground whitespace-nowrap">
+                        {currSymbol}{fmt(p.budget)}
+                      </span>
+                      {p.status === "completed" && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-xs ml-1"
+                          onClick={() => console.log("Fatura oluştur:", p.name)}
+                        >
+                          <FileText className="h-3 w-3 mr-1" />
+                          Fatura
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 5. Placeholder stat cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {stats.map((stat) => (
             <Card key={stat.title} className="border border-border shadow-none">
