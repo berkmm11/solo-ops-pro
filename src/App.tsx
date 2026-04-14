@@ -14,6 +14,7 @@ import Invoices from "@/pages/Invoices";
 import InvoiceDetail from "@/pages/InvoiceDetail";
 import Expenses from "@/pages/Expenses";
 import PayInvoice from "@/pages/PayInvoice";
+import Onboarding from "@/pages/Onboarding";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/hosgeldin" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/clients" element={<ProtectedRoute><Clients /></ProtectedRoute>} />
             <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />

@@ -143,6 +143,57 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          address: string | null
+          bank_name: string | null
+          brand_name: string | null
+          created_at: string
+          full_name: string | null
+          iban: string | null
+          id: string
+          logo_url: string | null
+          onboarding_completed: boolean
+          phone: string | null
+          specialty: string | null
+          tax_no: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          bank_name?: string | null
+          brand_name?: string | null
+          created_at?: string
+          full_name?: string | null
+          iban?: string | null
+          id?: string
+          logo_url?: string | null
+          onboarding_completed?: boolean
+          phone?: string | null
+          specialty?: string | null
+          tax_no?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          bank_name?: string | null
+          brand_name?: string | null
+          created_at?: string
+          full_name?: string | null
+          iban?: string | null
+          id?: string
+          logo_url?: string | null
+          onboarding_completed?: boolean
+          phone?: string | null
+          specialty?: string | null
+          tax_no?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       projects: {
         Row: {
           client_id: string | null
