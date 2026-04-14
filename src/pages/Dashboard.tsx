@@ -1,12 +1,13 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import AppLayout from "@/components/AppLayout";
+import EmptyState from "@/components/EmptyState";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
-  Receipt, Landmark, Building2, Wifi, Monitor, Calculator,
+  Receipt, Landmark,
   ChevronDown, ChevronUp, Wallet, HandCoins, TrendingUp,
-  FolderKanban, RefreshCw,
+  FolderKanban, RefreshCw, LayoutDashboard,
 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,15 +19,6 @@ import ExchangeRateBar from "@/components/ExchangeRateBar";
 
 const fmt = (n: number) =>
   n.toLocaleString("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-
-// ── Static config ──
-const sabitKalemler = [
-  { icon: Building2, label: "Kira", amount: 10_000 },
-  { icon: Wifi, label: "İnternet", amount: 1_500 },
-  { icon: Monitor, label: "Yazılım", amount: 3_500 },
-  { icon: Calculator, label: "Muhasebeci", amount: 3_000 },
-];
-const sabitGiderler = sabitKalemler.reduce((s, k) => s + k.amount, 0);
 
 const projectStatusConfig: Record<string, { label: string; color: string; dotClass: string }> = {
   taslak:       { label: "Taslak",       color: "#9CA3AF", dotClass: "bg-gray-400" },
@@ -87,7 +79,6 @@ const Dashboard = () => {
   // ── Realtime subscriptions ──
   useEffect(() => {
     if (!user) return;
-
     const channel = supabase
       .channel("dashboard-realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "projects", filter: `user_id=eq.${user.id}` }, () => {
@@ -103,22 +94,21 @@ const Dashboard = () => {
         queryClient.invalidateQueries({ queryKey: ["expenses"] });
       })
       .subscribe();
-
     return () => { supabase.removeChannel(channel); };
   }, [user, queryClient]);
 
-  // ── Computed stats (currency-aware) ──
+  // ── Computed stats ──
   const totalAlacakTRY = useMemo(
-    () => invoices.filter((i) => i.status !== "paid" && ((i as any).currency || "TRY") === "TRY").reduce((s, i) => s + Number(i.amount), 0),
+    () => invoices.filter((i) => i.status !== "paid" && (i.currency || "TRY") === "TRY").reduce((s, i) => s + Number(i.amount), 0),
     [invoices]
   );
 
   const pendingForeign = useMemo(() => {
     const byCurrency: Record<string, number> = {};
     invoices
-      .filter((i) => i.status !== "paid" && ((i as any).currency || "TRY") !== "TRY")
+      .filter((i) => i.status !== "paid" && (i.currency || "TRY") !== "TRY")
       .forEach((i) => {
-        const c = (i as any).currency || "TRY";
+        const c = i.currency || "TRY";
         byCurrency[c] = (byCurrency[c] || 0) + Number(i.amount);
       });
     return byCurrency;
@@ -128,7 +118,7 @@ const Dashboard = () => {
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
     return invoices
-      .filter((i) => i.status === "paid" && i.issue_date >= monthStart && ((i as any).currency || "TRY") === "TRY")
+      .filter((i) => i.status === "paid" && i.issue_date >= monthStart && (i.currency || "TRY") === "TRY")
       .reduce((s, i) => s + Number(i.amount), 0);
   }, [invoices]);
 
@@ -137,17 +127,42 @@ const Dashboard = () => {
     [projects]
   );
 
+  // Total earnings in TRY (paid invoices)
   const toplamGelirTRY = useMemo(
-    () => invoices.filter((i) => i.status === "paid" && ((i as any).currency || "TRY") === "TRY").reduce((s, i) => s + Number(i.amount), 0),
+    () => invoices.filter((i) => i.status === "paid" && (i.currency || "TRY") === "TRY").reduce((s, i) => s + Number(i.amount), 0),
     [invoices]
   );
 
+  // Foreign paid earnings
+  const paidForeign = useMemo(() => {
+    const byCurrency: Record<string, number> = {};
+    invoices
+      .filter((i) => i.status === "paid" && (i.currency || "TRY") !== "TRY")
+      .forEach((i) => {
+        const c = i.currency || "TRY";
+        byCurrency[c] = (byCurrency[c] || 0) + Number(i.amount);
+      });
+    return byCurrency;
+  }, [invoices]);
+
+  // Convert foreign paid to TRY
+  const paidForeignInTRY = useMemo(() => {
+    if (!rates) return 0;
+    let total = 0;
+    Object.entries(paidForeign).forEach(([c, amt]) => {
+      if (c === "USD") total += amt * rates.USD;
+      else if (c === "EUR") total += amt * rates.EUR;
+    });
+    return total;
+  }, [paidForeign, rates]);
+
+  // Real expenses total
   const toplamGider = useMemo(
     () => expenses.reduce((s, e) => s + Number(e.amount), 0),
     [expenses]
   );
 
-  // Convert foreign pending to TRY using live rates
+  // Convert foreign pending to TRY
   const foreignInTRY = useMemo(() => {
     if (!rates) return 0;
     let total = 0;
@@ -158,23 +173,40 @@ const Dashboard = () => {
     return total;
   }, [pendingForeign, rates]);
 
-  const harcanabilir = Math.max(0, toplamGelirTRY - toplamGider - sabitGiderler);
+  // Toplam kazanç = TRY paid + foreign paid converted
+  const toplamKazanc = toplamGelirTRY + paidForeignInTRY;
+  const harcanabilir = Math.max(0, toplamKazanc - toplamGider);
   const kdv = toplamGelirTRY * 0.2;
   const stopaj = toplamGelirTRY * 0.2;
-  const barTotal = Math.max(1, harcanabilir + kdv + stopaj + sabitGiderler);
+
+  const hasFinancialData = invoices.length > 0 || expenses.length > 0;
+  const barTotal = Math.max(1, harcanabilir + kdv + stopaj + toplamGider);
 
   const segments = [
     { label: "Harcanabilir", amount: harcanabilir, color: "bg-emerald-500" },
     { label: "Vergiler", amount: kdv + stopaj, color: "bg-amber-500" },
-    { label: "Giderler", amount: sabitGiderler, color: "bg-red-400" },
+    ...(toplamGider > 0 ? [{ label: "Giderler", amount: toplamGider, color: "bg-red-400" }] : []),
   ];
+
+  // ── Expense breakdown by category ──
+  const expenseByCategory = useMemo(() => {
+    const cats: Record<string, number> = {};
+    expenses.forEach((e) => {
+      const cat = e.category || "diger";
+      cats[cat] = (cats[cat] || 0) + Number(e.amount);
+    });
+    return Object.entries(cats).map(([cat, amount]) => ({ cat, amount }));
+  }, [expenses]);
+
+  const categoryLabels: Record<string, string> = {
+    kira: "Kira", vergi: "Vergi", abonelik: "Abonelik", diger: "Diğer",
+  };
 
   // ── Donut chart ──
   const donutData = useMemo(() => {
     const counts: Record<string, number> = {};
     projects.forEach((p) => {
-      const status = p.status;
-      counts[status] = (counts[status] || 0) + 1;
+      counts[p.status] = (counts[p.status] || 0) + 1;
     });
     return Object.entries(counts)
       .filter(([status]) => projectStatusConfig[status])
@@ -208,16 +240,26 @@ const Dashboard = () => {
     return `(${parts.join(" + ")}${tryEquiv} ayrıca bekliyor)`;
   }, [pendingForeign, foreignInTRY]);
 
+  // Foreign paid subtitle for hero
+  const paidForeignSubtitle = useMemo(() => {
+    const parts = Object.entries(paidForeign).map(([c, amt]) => fmtMoney(amt, c as Currency));
+    if (parts.length === 0) return null;
+    const tryEquiv = paidForeignInTRY > 0 ? ` ≈ ₺${fmt(paidForeignInTRY)}` : "";
+    return `${parts.join(" + ")}${tryEquiv} dahil`;
+  }, [paidForeign, paidForeignInTRY]);
+
   const statCards = [
     { title: "Toplam Alacak (₺)", icon: HandCoins, value: `₺${fmt(totalAlacakTRY)}` },
     { title: "Bu Ay Kazanç", icon: TrendingUp, value: `₺${fmt(buAyKazanc)}` },
     { title: "Aktif Projeler", icon: FolderKanban, value: String(aktifProjeSayisi) },
   ];
 
+  const hasNoData = projects.length === 0 && invoices.length === 0 && expenses.length === 0;
+
   return (
     <AppLayout>
       <div className="space-y-6">
-        {/* Header with refresh */}
+        {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
             <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
@@ -232,112 +274,125 @@ const Dashboard = () => {
 
         {isLoading ? (
           <p className="text-sm text-muted-foreground text-center py-12">Yükleniyor…</p>
+        ) : hasNoData ? (
+          <EmptyState
+            icon={LayoutDashboard}
+            emoji="📊"
+            title="Henüz veri yok"
+            description="Müşteri, proje veya fatura ekleyerek dashboard'unuzu doldurun."
+          />
         ) : (
           <>
-            {/* 1. Hero Card */}
+            {/* 1. Hero Card — Toplam Kazanç */}
             <div className="rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 p-8 md:p-10 text-center text-white">
               <p className="text-sm font-medium opacity-90 tracking-wide uppercase">
-                Harcanabilir Bakiye
+                Toplam Kazanç
               </p>
               <p className="text-5xl md:text-6xl font-bold mt-3 tracking-tight">
-                ₺{fmt(harcanabilir)}
+                ₺{fmt(toplamKazanc)}
               </p>
+              {paidForeignSubtitle && (
+                <p className="text-sm opacity-75 mt-2">{paidForeignSubtitle}</p>
+              )}
               {foreignSubtitle && (
-                <p className="text-sm opacity-75 mt-2">{foreignSubtitle}</p>
+                <p className="text-sm opacity-75 mt-1">{foreignSubtitle}</p>
               )}
               <p className="text-sm opacity-75 mt-3">
-                Gönül rahatlığıyla harcayabileceğin tutar
+                Harcanabilir: ₺{fmt(harcanabilir)}
               </p>
             </div>
 
-            {/* 2. Horizontal stacked bar */}
-            <div className="space-y-2">
-              <div className="flex justify-between text-xs text-muted-foreground px-1">
-                {segments.map((s) => (
-                  <span key={s.label} style={{ width: `${(s.amount / barTotal) * 100}%` }} className="text-center">
-                    ₺{fmt(s.amount)}
-                  </span>
-                ))}
+            {/* 2. Horizontal stacked bar — only if financial data exists */}
+            {hasFinancialData && toplamKazanc > 0 && (
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs text-muted-foreground px-1">
+                  {segments.map((s) => (
+                    <span key={s.label} style={{ width: `${(s.amount / barTotal) * 100}%` }} className="text-center">
+                      ₺{fmt(s.amount)}
+                    </span>
+                  ))}
+                </div>
+                <div className="flex h-4 rounded-full overflow-hidden">
+                  {segments.map((s) => (
+                    <div key={s.label} className={`${s.color} transition-all`} style={{ width: `${(s.amount / barTotal) * 100}%` }} />
+                  ))}
+                </div>
+                <div className="flex justify-between text-xs text-muted-foreground px-1">
+                  {segments.map((s) => (
+                    <span key={s.label} style={{ width: `${(s.amount / barTotal) * 100}%` }} className="text-center">
+                      {s.label}
+                    </span>
+                  ))}
+                </div>
               </div>
-              <div className="flex h-4 rounded-full overflow-hidden">
-                {segments.map((s) => (
-                  <div key={s.label} className={`${s.color} transition-all`} style={{ width: `${(s.amount / barTotal) * 100}%` }} />
-                ))}
-              </div>
-              <div className="flex justify-between text-xs text-muted-foreground px-1">
-                {segments.map((s) => (
-                  <span key={s.label} style={{ width: `${(s.amount / barTotal) * 100}%` }} className="text-center">
-                    {s.label}
-                  </span>
-                ))}
-              </div>
-            </div>
+            )}
 
-            {/* 3. Three breakdown cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="border border-border shadow-none">
-                <CardContent className="flex items-center gap-4 p-5">
-                  <div className="h-10 w-10 rounded-lg bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center">
-                    <Receipt className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">KDV Karşılığı</p>
-                    <p className="text-lg font-semibold text-foreground">₺{fmt(kdv)}</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border border-border shadow-none">
-                <CardContent className="flex items-center gap-4 p-5">
-                  <div className="h-10 w-10 rounded-lg bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center">
-                    <Landmark className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Stopaj Karşılığı</p>
-                    <p className="text-lg font-semibold text-foreground">₺{fmt(stopaj)}</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card
-                className="border border-border shadow-none cursor-pointer transition-shadow hover:shadow-sm"
-                onClick={() => setGiderOpen(!giderOpen)}
-              >
-                <CardContent className="p-5">
-                  <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-lg bg-red-50 dark:bg-red-900/30 flex items-center justify-center">
-                      <Wallet className="h-5 w-5 text-red-500 dark:text-red-400" />
+            {/* 3. Breakdown cards — only show relevant ones */}
+            <div className={`grid grid-cols-1 gap-4 ${toplamGider > 0 ? "md:grid-cols-3" : "md:grid-cols-2"}`}>
+              {toplamGelirTRY > 0 && (
+                <Card className="border border-border shadow-none">
+                  <CardContent className="flex items-center gap-4 p-5">
+                    <div className="h-10 w-10 rounded-lg bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center">
+                      <Receipt className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm text-muted-foreground">Sabit Giderler</p>
-                      <p className="text-lg font-semibold text-foreground">₺{fmt(sabitGiderler)}</p>
+                    <div>
+                      <p className="text-sm text-muted-foreground">KDV Karşılığı</p>
+                      <p className="text-lg font-semibold text-foreground">₺{fmt(kdv)}</p>
                     </div>
-                    {giderOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-                  </div>
-                  {giderOpen && (
-                    <div className="mt-4 space-y-3 border-t border-border pt-4">
-                      {sabitKalemler.map((k) => (
-                        <div key={k.label} className="flex items-center justify-between text-sm">
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <k.icon className="h-4 w-4" />
-                            <span>{k.label}</span>
+                  </CardContent>
+                </Card>
+              )}
+
+              {toplamGelirTRY > 0 && (
+                <Card className="border border-border shadow-none">
+                  <CardContent className="flex items-center gap-4 p-5">
+                    <div className="h-10 w-10 rounded-lg bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center">
+                      <Landmark className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Stopaj Karşılığı</p>
+                      <p className="text-lg font-semibold text-foreground">₺{fmt(stopaj)}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {toplamGider > 0 && (
+                <Card
+                  className="border border-border shadow-none cursor-pointer transition-shadow hover:shadow-sm"
+                  onClick={() => setGiderOpen(!giderOpen)}
+                >
+                  <CardContent className="p-5">
+                    <div className="flex items-center gap-4">
+                      <div className="h-10 w-10 rounded-lg bg-red-50 dark:bg-red-900/30 flex items-center justify-center">
+                        <Wallet className="h-5 w-5 text-red-500 dark:text-red-400" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm text-muted-foreground">Toplam Giderler</p>
+                        <p className="text-lg font-semibold text-foreground">₺{fmt(toplamGider)}</p>
+                      </div>
+                      {giderOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                    </div>
+                    {giderOpen && expenseByCategory.length > 0 && (
+                      <div className="mt-4 space-y-3 border-t border-border pt-4">
+                        {expenseByCategory.map((item) => (
+                          <div key={item.cat} className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">{categoryLabels[item.cat] || item.cat}</span>
+                            <span className="font-medium text-foreground">₺{fmt(item.amount)}</span>
                           </div>
-                          <span className="font-medium text-foreground">₺{fmt(k.amount)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
-            {/* 4. Project Status Section */}
-            <Card className="border border-border rounded-xl shadow-sm">
-              <CardContent className="p-6">
-                <h2 className="text-lg font-semibold text-foreground mb-4">Proje Durumu</h2>
-                {projects.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-6">Henüz proje eklenmemiş.</p>
-                ) : (
+            {/* 4. Project Status Section — only if projects exist */}
+            {projects.length > 0 && (
+              <Card className="border border-border rounded-xl shadow-sm">
+                <CardContent className="p-6">
+                  <h2 className="text-lg font-semibold text-foreground mb-4">Proje Durumu</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Donut Chart */}
                     <div className="flex flex-col items-center">
@@ -398,7 +453,7 @@ const Dashboard = () => {
                       {filteredProjects.map((p) => {
                         const sc = projectStatusConfig[p.status] || { label: p.status, color: "#9CA3AF", dotClass: "bg-gray-400" };
                         const clientName = (p as any).clients?.name || "—";
-                        const price = p.price != null ? fmtMoney(p.price, ((p as any).currency || "TRY") as Currency) : "—";
+                        const price = p.price != null ? fmtMoney(p.price, (p.currency || "TRY") as Currency) : "—";
                         return (
                           <div
                             key={p.id}
@@ -415,9 +470,9 @@ const Dashboard = () => {
                       })}
                     </div>
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
 
             {/* 5. Stat cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
