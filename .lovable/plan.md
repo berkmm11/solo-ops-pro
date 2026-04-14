@@ -1,74 +1,50 @@
 
 
-# AI Logo Tasarımı ve Fatura Özelleştirme Planı
+## Root Cause
 
-Bu plan, fal.ai API kullanarak iki "Business" özelliği ekler: **AI Logo Oluşturma** ve **AI Fatura Şablonu Özelleştirme**.
+The crash happens when you click USD or EUR on the "Toplam Kazanc" hero card. The JSX uses multiple adjacent conditional expressions that render text nodes:
 
----
+```jsx
+{heroCurrency === "TRY" && `₺${fmt(...)}`}
+{heroCurrency === "USD" && rates && `$${fmt(...)}`}
+{heroCurrency === "EUR" && rates && `€${fmt(...)}`}
+{(heroCurrency !== "TRY" && !rates) && `₺${fmt(...)}`}
+```
 
-## Ön Koşul: fal.ai API Key
+When conditions flip, React tries to remove a text node that the browser has already merged with an adjacent one. This is a well-known React bug with adjacent conditional text nodes -- it causes `removeChild: NotFoundError`.
 
-- `secrets--add_secret` ile kullanıcıdan `FAL_API_KEY` istenir
-- Edge function'larda `Deno.env.get("FAL_API_KEY")` olarak kullanılır
+The same pattern exists for the "Harcanabilir" line below it (lines 325-328).
 
----
+Additionally, `SoloCopilot` and `ProjectStatusDonut` are plain function components that receive refs (visible in console warnings), which contributes to instability.
 
-## 1. AI Logo Oluşturma
+## Plan
 
-**Nerede:** Ayarlar sayfasında (`/settings`) Marka kartı içinde, logo alanında "Logo yoksa AI ile oluştur" butonu.
+### 1. Fix hero card conditional text (Dashboard.tsx)
+Replace the four adjacent conditional text expressions with a single computed value using a helper or ternary, for both "Toplam Kazanc" and "Harcanabilir":
 
-**Akış:**
-1. Kullanıcı logosu yoksa "AI ile Logo Oluştur" butonu görünür
-2. Tıklayınca dialog açılır: marka adı, sektör, stil tercihi (minimalist, modern, cesur vb.) ve renk tercihi girilebilir
-3. "Oluştur" butonuna basılır → edge function çağrılır
-4. fal.ai'den 2-3 alternatif logo üretilir ve gösterilir
-5. Kullanıcı birini seçer → `profile-logos` bucket'ına yüklenir ve profilde kaydedilir
+```tsx
+// Before (4 adjacent conditionals):
+{heroCurrency === "TRY" && ...}
+{heroCurrency === "USD" && rates && ...}
+...
 
-**Teknik:**
-- **Yeni Edge Function:** `supabase/functions/generate-logo/index.ts`
-  - fal.ai flux/schnell veya benzeri model ile logo üretir
-  - Prompt'u marka adı + stil + sektörden otomatik oluşturur
-  - Base64 döner veya URL döner
-- **Settings.tsx'e eklenenler:**
-  - `LogoGeneratorDialog` bileşeni (dialog içinde form + sonuç galerisi)
-  - Logo yokken "AI ile Oluştur ✨" butonu
+// After (single expression):
+{heroCurrency === "TRY"
+  ? `₺${fmt(toplamKazanc)}`
+  : rates
+    ? heroCurrency === "USD"
+      ? `$${fmt(toplamKazanc / rates.USD)}`
+      : `€${fmt(toplamKazanc / rates.EUR)}`
+    : `₺${fmt(toplamKazanc)}`}
+```
 
----
+Same fix for the "Harcanabilir" line.
 
-## 2. AI Fatura Şablonu Özelleştirme
+### 2. Fix forwardRef warnings (SoloCopilot.tsx, ProjectStatusDonut.tsx)
+Wrap both components with `React.forwardRef` to eliminate the ref warnings that destabilize React's reconciler.
 
-**Nerede:** Fatura detay sayfasında (`/invoice/:id`) veya yeni bir fatura şablon ayarları bölümünde.
-
-**Akış:**
-1. Kullanıcı fatura şablon tercihlerini ayarlar: renk şeması, layout stili, font tercihi
-2. fal.ai ile fatura arka planı veya dekoratif elementler üretilir
-3. Üretilen tasarım profilde kaydedilir ve tüm faturalara uygulanır
-
-**Teknik:**
-- **Yeni Edge Function:** `supabase/functions/generate-invoice-template/index.ts`
-  - Kullanıcının tercihlerine göre fatura dekoratif elementleri üretir
-- **DB Migration:** `profiles` tablosuna `invoice_template_config` (jsonb) kolonu eklenir — renk, stil, arka plan URL'si gibi tercihler saklanır
-- **InvoiceDetail.tsx güncellenir:** Kaydedilen şablon tercihleri fatura görünümüne uygulanır
-- **Yeni bileşen:** `InvoiceTemplateCustomizer` — şablon ayar dialog'u
-
----
-
-## 3. Business Modeli İşareti
-
-- Her iki özelliğin butonlarına "Business ✨" badge'i eklenir
-- Şimdilik ücretsiz kullanılır, ileride ödeme entegrasyonu eklenebilir
-
----
-
-## Dosya Değişiklikleri Özeti
-
-| Dosya | İşlem |
-|---|---|
-| `supabase/functions/generate-logo/index.ts` | Yeni — fal.ai logo üretim |
-| `supabase/functions/generate-invoice-template/index.ts` | Yeni — fal.ai fatura dekor üretim |
-| `src/pages/Settings.tsx` | Güncelle — AI logo butonu ve dialog |
-| `src/pages/InvoiceDetail.tsx` | Güncelle — şablon tercihleri uygula |
-| `src/components/LogoGeneratorDialog.tsx` | Yeni — logo üretim UI |
-| `src/components/InvoiceTemplateCustomizer.tsx` | Yeni — fatura şablon ayar UI |
-| DB migration | `profiles` tablosuna `invoice_template_config` jsonb kolonu |
+### 3. Files changed
+- `src/pages/Dashboard.tsx` -- replace conditional text nodes with single expressions
+- `src/components/SoloCopilot.tsx` -- wrap with forwardRef
+- `src/components/dashboard/ProjectStatusDonut.tsx` -- wrap with forwardRef
 
