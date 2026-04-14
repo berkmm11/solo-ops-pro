@@ -1,6 +1,7 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import NotificationBell from "@/components/NotificationBell";
+import SoloCopilot from "@/components/SoloCopilot";
 
 const AppLayout = ({ children }: { children: React.ReactNode }) => {
   return (
