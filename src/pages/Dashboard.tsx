@@ -147,6 +147,17 @@ const Dashboard = () => {
     [expenses]
   );
 
+  // Convert foreign pending to TRY using live rates
+  const foreignInTRY = useMemo(() => {
+    if (!rates) return 0;
+    let total = 0;
+    Object.entries(pendingForeign).forEach(([c, amt]) => {
+      if (c === "USD") total += amt * rates.USD;
+      else if (c === "EUR") total += amt * rates.EUR;
+    });
+    return total;
+  }, [pendingForeign, rates]);
+
   const harcanabilir = Math.max(0, toplamGelirTRY - toplamGider - sabitGiderler);
   const kdv = toplamGelirTRY * 0.2;
   const stopaj = toplamGelirTRY * 0.2;
