@@ -15,6 +15,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
           </header>
           <main className="flex-1 p-8">{children}</main>
         </div>
+        <SoloCopilot />
       </div>
     </SidebarProvider>
   );
