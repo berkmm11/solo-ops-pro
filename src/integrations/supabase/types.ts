@@ -159,7 +159,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_client_invoice_stats: {
+        Args: { p_user_id: string }
+        Returns: {
+          client_id: string
+          computed_score: string
+          ontime_count: number
+          overdue_count: number
+          total_invoices: number
+        }[]
+      }
     }
     Enums: {
       invoice_status: "pending" | "paid" | "overdue"
