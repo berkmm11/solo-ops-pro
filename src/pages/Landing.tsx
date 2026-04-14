@@ -12,6 +12,8 @@ import {
   ArrowRight,
   Zap,
   Quote,
+  Check,
+  Gift,
 } from "lucide-react";
 
 /* ─── HLS Video Hero ─── */
