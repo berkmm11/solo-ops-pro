@@ -86,8 +86,19 @@ const Dashboard = () => {
     setStatusFilter((prev) => (prev === status ? null : status));
 
   const filteredProjects = statusFilter
-    ? mockProjects.filter((p) => p.status === statusFilter)
-    : mockProjects;
+    ? projects.filter((p) => p.status === statusFilter)
+    : projects;
+
+  const handleInvoice = (project: MockProject) => {
+    setProjects((prev) =>
+      prev.map((p) => (p.id === project.id ? { ...p, status: "invoiced" } : p))
+    );
+    setInvoiceModal(null);
+    toast.success("Fatura oluşturuldu!");
+  };
+
+  const invoiceCount = projects.filter((p) => p.status === "invoiced" || p.status === "paid").length;
+  const generateInvoiceNo = () => `SOP-${new Date().getFullYear()}-${String(invoiceCount + 1).padStart(3, "0")}`;
 
   return (
     <AppLayout>
