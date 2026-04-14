@@ -7,72 +7,95 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 220 13% 9%;
+    --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 13% 9%;
+    --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 13% 9%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 220 13% 9%;
+    --primary: 222 47% 11%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 9% 46%;
-    --secondary-foreground: 220 13% 9%;
+    --secondary: 210 20% 98%;
+    --secondary-foreground: 222 47% 11%;
 
     --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%;
+    --muted-foreground: 215 16% 47%;
 
-    --accent: 220 14% 96%;
-    --accent-foreground: 220 13% 9%;
+    --accent: 173 80% 40%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
+    --success: 152 76% 80%;
+    --success-foreground: 160 84% 20%;
+    --warning: 48 96% 89%;
+    --warning-foreground: 32 95% 30%;
+    --info: 214 95% 93%;
+    --info-foreground: 221 83% 40%;
+
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 220 13% 9%;
+    --ring: 222 47% 11%;
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 220 13% 9%;
-    --sidebar-primary: 220 13% 9%;
+    --sidebar-background: 210 20% 98%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 222 47% 11%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 220 14% 96%;
-    --sidebar-accent-foreground: 220 13% 9%;
+    --sidebar-accent-foreground: 222 47% 11%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 220 13% 9%;
+    --sidebar-ring: 222 47% 11%;
   }
 
   .dark {
-    --background: 220 13% 9%;
-    --foreground: 0 0% 100%;
-    --card: 220 13% 9%;
-    --card-foreground: 0 0% 100%;
-    --popover: 220 13% 9%;
-    --popover-foreground: 0 0% 100%;
-    --primary: 0 0% 100%;
-    --primary-foreground: 220 13% 9%;
-    --secondary: 220 9% 46%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 220 13% 17%;
-    --muted-foreground: 220 9% 46%;
-    --accent: 220 13% 17%;
-    --accent-foreground: 0 0% 100%;
+    --background: 0 0% 4%;
+    --foreground: 0 0% 98%;
+
+    --card: 0 0% 9%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 0 0% 9%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 4%;
+
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 64%;
+
+    --accent: 173 72% 50%;
+    --accent-foreground: 0 0% 4%;
+
     --destructive: 0 62% 30%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 220 13% 17%;
-    --input: 220 13% 17%;
+    --destructive-foreground: 0 0% 98%;
+
+    --success: 163 72% 15%;
+    --success-foreground: 152 76% 80%;
+    --warning: 28 80% 10%;
+    --warning-foreground: 48 97% 63%;
+    --info: 224 64% 17%;
+    --info-foreground: 213 94% 78%;
+
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
     --ring: 0 0% 83%;
-    --sidebar-background: 220 13% 9%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 220 13% 9%;
-    --sidebar-accent: 220 13% 17%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 220 13% 17%;
+
+    --sidebar-background: 0 0% 6%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 0 0% 98%;
+    --sidebar-primary-foreground: 0 0% 4%;
+    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 18%;
     --sidebar-ring: 0 0% 83%;
   }
 }
@@ -85,6 +108,22 @@
   body {
     @apply bg-background text-foreground font-sans;
     font-family: 'Inter', sans-serif;
+  }
+
+  /* Smooth theme transition */
+  *,
+  *::before,
+  *::after {
+    transition-property: background-color, border-color, color;
+    transition-duration: 200ms;
+    transition-timing-function: ease;
+  }
+
+  /* Exclude elements with their own hover transitions */
+  button:hover,
+  a:hover,
+  [role="button"]:hover {
+    transition-duration: 150ms;
   }
 }
 

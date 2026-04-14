@@ -255,8 +255,8 @@ const Dashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card className="border border-border shadow-none">
                 <CardContent className="flex items-center gap-4 p-5">
-                  <div className="h-10 w-10 rounded-lg bg-amber-50 flex items-center justify-center">
-                    <Receipt className="h-5 w-5 text-amber-600" />
+                  <div className="h-10 w-10 rounded-lg bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center">
+                    <Receipt className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">KDV Karşılığı</p>
@@ -267,8 +267,8 @@ const Dashboard = () => {
 
               <Card className="border border-border shadow-none">
                 <CardContent className="flex items-center gap-4 p-5">
-                  <div className="h-10 w-10 rounded-lg bg-amber-50 flex items-center justify-center">
-                    <Landmark className="h-5 w-5 text-amber-600" />
+                  <div className="h-10 w-10 rounded-lg bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center">
+                    <Landmark className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Stopaj Karşılığı</p>
@@ -283,8 +283,8 @@ const Dashboard = () => {
               >
                 <CardContent className="p-5">
                   <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-lg bg-red-50 flex items-center justify-center">
-                      <Wallet className="h-5 w-5 text-red-500" />
+                    <div className="h-10 w-10 rounded-lg bg-red-50 dark:bg-red-900/30 flex items-center justify-center">
+                      <Wallet className="h-5 w-5 text-red-500 dark:text-red-400" />
                     </div>
                     <div className="flex-1">
                       <p className="text-sm text-muted-foreground">Sabit Giderler</p>

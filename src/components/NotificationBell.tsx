@@ -22,9 +22,9 @@ const fmtAmount = (n: number) =>
   n.toLocaleString("tr-TR", { minimumFractionDigits: 0 }) + " ₺";
 
 const iconMap = {
-  due_soon: { icon: Clock, className: "text-amber-500 bg-amber-50" },
-  overdue: { icon: AlertTriangle, className: "text-red-500 bg-red-50" },
-  paid: { icon: CheckCircle, className: "text-emerald-500 bg-emerald-50" },
+  due_soon: { icon: Clock, className: "text-amber-500 bg-amber-50 dark:bg-amber-900/30" },
+  overdue: { icon: AlertTriangle, className: "text-red-500 bg-red-50 dark:bg-red-900/30" },
+  paid: { icon: CheckCircle, className: "text-emerald-500 bg-emerald-50 dark:bg-emerald-900/30" },
 };
 
 const NotificationBell = () => {

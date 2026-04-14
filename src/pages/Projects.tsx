@@ -31,10 +31,10 @@ type Client = Tables<"clients">;
 type ProjectStatus = "taslak" | "aktif" | "faturalandı" | "ödendi";
 
 const statusConfig: Record<ProjectStatus, { label: string; bg: string; text: string }> = {
-  taslak:      { label: "Taslak",      bg: "bg-[#F3F4F6]", text: "text-[#374151]" },
-  aktif:       { label: "Aktif",       bg: "bg-[#DBEAFE]", text: "text-[#1E40AF]" },
-  "faturalandı": { label: "Faturalandı", bg: "bg-[#CCFBF1]", text: "text-[#0F766E]" },
-  "ödendi":    { label: "Ödendi",      bg: "bg-[#D1FAE5]", text: "text-[#065F46]" },
+  taslak:      { label: "Taslak",      bg: "bg-muted", text: "text-muted-foreground" },
+  aktif:       { label: "Aktif",       bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-800 dark:text-blue-300" },
+  "faturalandı": { label: "Faturalandı", bg: "bg-teal-100 dark:bg-teal-900/30", text: "text-teal-800 dark:text-teal-300" },
+  "ödendi":    { label: "Ödendi",      bg: "bg-emerald-100 dark:bg-emerald-900/30", text: "text-emerald-800 dark:text-emerald-300" },
 };
 
 const filters: { value: string; label: string }[] = [

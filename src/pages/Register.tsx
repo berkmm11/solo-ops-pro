@@ -10,6 +10,7 @@ import PasswordStrength, { getPasswordValid } from "@/components/PasswordStrengt
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import SocialLoginButtons from "@/components/SocialLoginButtons";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const Register = () => {
   const [email, setEmail] = useState("");
@@ -42,7 +43,10 @@ const Register = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 relative">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
       <Card className="w-full max-w-sm border border-border shadow-none">
         <CardHeader className="text-center">
           <p className="text-lg font-semibold tracking-tight mb-1">soloops</p>
