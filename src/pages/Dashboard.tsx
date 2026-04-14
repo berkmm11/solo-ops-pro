@@ -44,7 +44,7 @@ const stats = [
 ];
 
 // Project status mock data
-const mockProjects = [
+const initialProjects = [
   { id: 1, name: "Acme Corp Web Sitesi", client: "Acme Corp", budget: 45000, currency: "TRY", status: "in_progress", dueDate: "2026-05-01" },
   { id: 2, name: "Beta Logo Tasarım", client: "Beta Ltd", budget: 12000, currency: "TRY", status: "completed", dueDate: "2026-04-10" },
   { id: 3, name: "Gamma App UI/UX", client: "Gamma Inc", budget: 2500, currency: "USD", status: "invoiced", dueDate: "2026-03-28" },
@@ -61,23 +61,26 @@ const projectStatusConfig: Record<string, { label: string; color: string; dotCla
   overdue:     { label: "Gecikmiş",     color: "#EF4444", dotClass: "bg-red-500" },
 };
 
-const donutData = Object.entries(
-  mockProjects.reduce<Record<string, number>>((acc, p) => {
-    acc[p.status] = (acc[p.status] || 0) + 1;
-    return acc;
-  }, {})
-).map(([status, count]) => ({
-  status,
-  name: projectStatusConfig[status].label,
-  value: count,
-  color: projectStatusConfig[status].color,
-}));
+type MockProject = typeof initialProjects[number];
 
 const Dashboard = () => {
   const [giderOpen, setGiderOpen] = useState(false);
   const [activeCurrency, setActiveCurrency] = useState(0);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [projects, setProjects] = useState(initialProjects);
+  const [invoiceModal, setInvoiceModal] = useState<MockProject | null>(null);
   const active = currencies[activeCurrency];
+
+  const donutData = useMemo(() => {
+    const counts: Record<string, number> = {};
+    projects.forEach((p) => { counts[p.status] = (counts[p.status] || 0) + 1; });
+    return Object.entries(counts).map(([status, count]) => ({
+      status,
+      name: projectStatusConfig[status].label,
+      value: count,
+      color: projectStatusConfig[status].color,
+    }));
+  }, [projects]);
 
   const toggleFilter = (status: string) =>
     setStatusFilter((prev) => (prev === status ? null : status));
