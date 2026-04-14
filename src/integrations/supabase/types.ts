@@ -155,6 +155,7 @@ export type Database = {
           full_name: string | null
           iban: string | null
           id: string
+          invoice_template_config: Json | null
           logo_url: string | null
           onboarding_completed: boolean
           phone: string | null
@@ -171,6 +172,7 @@ export type Database = {
           full_name?: string | null
           iban?: string | null
           id?: string
+          invoice_template_config?: Json | null
           logo_url?: string | null
           onboarding_completed?: boolean
           phone?: string | null
@@ -187,6 +189,7 @@ export type Database = {
           full_name?: string | null
           iban?: string | null
           id?: string
+          invoice_template_config?: Json | null
           logo_url?: string | null
           onboarding_completed?: boolean
           phone?: string | null

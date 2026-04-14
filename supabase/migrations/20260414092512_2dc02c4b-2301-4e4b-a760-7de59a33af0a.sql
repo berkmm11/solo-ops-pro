@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN invoice_template_config jsonb DEFAULT null;
