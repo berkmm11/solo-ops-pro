@@ -1,8 +1,10 @@
-import { useState } from "react";
-import { Check, Copy, Clock } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { useParams } from "react-router-dom";
+import { Check, Copy, Clock, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import confetti from "canvas-confetti";
 
 const mockInvoice = {
   invoice_no: "SOP-2026-001",
@@ -12,15 +14,58 @@ const mockInvoice = {
   amount: 45000,
   due_date: "01.05.2026",
   iban: "TR00 0000 0000 0000 0000 0000 00",
-  status: "pending" as const,
 };
 
 const fmtAmount = (n: number) =>
   n.toLocaleString("tr-TR", { minimumFractionDigits: 0 });
 
+const fireConfetti = () => {
+  const colors = ["#FFD700", "#FFA500", "#10B981", "#059669", "#3B82F6", "#6366F1"];
+  const end = Date.now() + 3500;
+
+  const frame = () => {
+    if (Date.now() > end) return;
+
+    confetti({
+      particleCount: 3,
+      angle: 60,
+      spread: 55,
+      origin: { x: 0, y: 0.6 },
+      colors,
+    });
+    confetti({
+      particleCount: 3,
+      angle: 120,
+      spread: 55,
+      origin: { x: 1, y: 0.6 },
+      colors,
+    });
+
+    requestAnimationFrame(frame);
+  };
+
+  // Big initial burst
+  confetti({
+    particleCount: 100,
+    spread: 100,
+    origin: { y: 0.5 },
+    colors,
+    startVelocity: 45,
+    gravity: 0.8,
+    scalar: 1.2,
+  });
+
+  frame();
+};
+
 const PayInvoice = () => {
+  const { id } = useParams<{ id: string }>();
+  const storageKey = `soloops_paid_${id || "demo"}`;
+
   const [copied, setCopied] = useState(false);
-  const [confirmed, setConfirmed] = useState(false);
+  const [processing, setProcessing] = useState(false);
+  const [paid, setPaid] = useState(() => localStorage.getItem(storageKey) === "true");
+  const [showThankYou, setShowThankYou] = useState(paid);
 
   const copyIban = async () => {
     await navigator.clipboard.writeText(mockInvoice.iban.replace(/\s/g, ""));
@@ -29,10 +74,19 @@ const PayInvoice = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const confirmPayment = () => {
-    setConfirmed(true);
-    toast.success("Ödeme onayınız alındı. Teşekkür ederiz!");
-  };
+  const confirmPayment = useCallback(() => {
+    setProcessing(true);
+
+    setTimeout(() => {
+      setProcessing(false);
+      setPaid(true);
+      localStorage.setItem(storageKey, "true");
+      fireConfetti();
+      toast.success("Ödeme onayınız alındı. Teşekkür ederiz!");
+
+      setTimeout(() => setShowThankYou(true), 600);
+    }, 1500);
+  }, [storageKey]);
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] flex flex-col">
@@ -51,17 +105,19 @@ const PayInvoice = () => {
             {/* Status + Invoice No */}
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-[#6B7280]">{mockInvoice.invoice_no}</p>
-              {!confirmed ? (
-                <Badge className="bg-[#FEF3C7] text-[#92400E] hover:bg-[#FEF3C7] border-0 text-xs font-medium px-2.5 py-0.5">
-                  <Clock className="mr-1 h-3 w-3" />
-                  Ödeme Bekliyor
-                </Badge>
-              ) : (
-                <Badge className="bg-[#D1FAE5] text-[#065F46] hover:bg-[#D1FAE5] border-0 text-xs font-medium px-2.5 py-0.5">
-                  <Check className="mr-1 h-3 w-3" />
-                  Onaylandı
-                </Badge>
-              )}
+              <div className="transition-all duration-500">
+                {paid ? (
+                  <Badge className="bg-[#D1FAE5] text-[#065F46] hover:bg-[#D1FAE5] border-0 text-xs font-medium px-2.5 py-0.5 animate-scale-in">
+                    <Check className="mr-1 h-3 w-3" />
+                    Ödendi ✓
+                  </Badge>
+                ) : (
+                  <Badge className="bg-[#FEF3C7] text-[#92400E] hover:bg-[#FEF3C7] border-0 text-xs font-medium px-2.5 py-0.5">
+                    <Clock className="mr-1 h-3 w-3" />
+                    Ödeme Bekliyor
+                  </Badge>
+                )}
+              </div>
             </div>
 
             {/* Amount */}
@@ -112,22 +168,43 @@ const PayInvoice = () => {
             <p className="text-xs text-[#9CA3AF] mt-2">Kopyalamak için tıklayın</p>
           </div>
 
-          {/* Confirm Button */}
-          {!confirmed ? (
+          {/* Confirm Button / Success State */}
+          {!paid ? (
             <Button
               onClick={confirmPayment}
-              className="w-full rounded-xl py-6 text-lg font-bold bg-[#059669] hover:bg-[#047857] text-white shadow-sm"
+              disabled={processing}
+              className="w-full rounded-xl py-6 text-lg font-bold bg-[#059669] hover:bg-[#047857] text-white shadow-sm disabled:opacity-80"
               size="lg"
             >
-              Ödemeyi Onayla
+              {processing ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  İşleniyor...
+                </>
+              ) : (
+                "Ödemeyi Onayla"
+              )}
             </Button>
           ) : (
-            <div className="text-center py-4 space-y-1">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#D1FAE5] mb-2">
-                <Check className="h-6 w-6 text-[#059669]" />
-              </div>
-              <p className="text-sm font-medium text-[#111827]">Ödeme onayınız alındı</p>
-              <p className="text-xs text-[#6B7280]">Teşekkür ederiz, en kısa sürede kontrol edilecektir.</p>
+            <Button
+              disabled
+              className="w-full rounded-xl py-6 text-lg font-bold bg-[#059669] text-white shadow-sm cursor-default animate-scale-in"
+              size="lg"
+            >
+              <Check className="mr-2 h-5 w-5" />
+              Ödeme Başarılı!
+            </Button>
+          )}
+
+          {/* Thank you message */}
+          {showThankYou && (
+            <div className="text-center py-4 animate-fade-in">
+              <p className="text-sm font-medium text-[#111827]">
+                Harikasınız! Berk projenin bir sonraki aşamasına büyük bir motivasyonla başlıyor 🎉
+              </p>
+              <p className="text-xs text-[#6B7280] mt-1">
+                Teşekkür ederiz, en kısa sürede kontrol edilecektir.
+              </p>
             </div>
           )}
 
