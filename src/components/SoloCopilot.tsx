@@ -7,7 +7,7 @@ import { toast } from "sonner";
 
 type Message = { role: "user" | "assistant"; content: string };
 
-const SoloCopilot = React.forwardRef<HTMLDivElement>((_, ref) => {
+const SoloCopilot = () => {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -68,7 +68,7 @@ const SoloCopilot = React.forwardRef<HTMLDivElement>((_, ref) => {
 
       {/* Chat panel */}
       {open && (
-        <div ref={ref} className="fixed bottom-6 right-6 z-50 w-[380px] max-w-[calc(100vw-2rem)] h-[520px] max-h-[calc(100vh-3rem)] bg-background border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden print:hidden animate-in fade-in slide-in-from-bottom-4 duration-200">
+        <div className="fixed bottom-6 right-6 z-50 w-[380px] max-w-[calc(100vw-2rem)] h-[520px] max-h-[calc(100vh-3rem)] bg-background border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden print:hidden animate-in fade-in slide-in-from-bottom-4 duration-200">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30">
             <div className="flex items-center gap-2">
@@ -139,8 +139,6 @@ const SoloCopilot = React.forwardRef<HTMLDivElement>((_, ref) => {
       )}
     </>
   );
-});
-
-SoloCopilot.displayName = "SoloCopilot";
+};
 
 export default SoloCopilot;
