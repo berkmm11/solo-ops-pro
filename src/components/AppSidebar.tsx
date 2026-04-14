@@ -34,11 +34,11 @@ export function AppSidebar() {
       <SidebarHeader className="p-4">
         {!collapsed && (
           <span className="text-lg font-semibold tracking-tight text-foreground">
-            soloops
+            sol<span className="inline-block" style={{ transform: 'scaleX(1.1)' }}>∞</span>ps
           </span>
         )}
         {collapsed && (
-          <span className="text-lg font-semibold text-foreground">s</span>
+          <span className="text-lg font-semibold text-foreground">∞</span>
         )}
       </SidebarHeader>
 
@@ -52,8 +52,8 @@ export function AppSidebar() {
                     <NavLink
                       to={item.url}
                       end
-                      className="hover:bg-accent"
-                      activeClassName="bg-accent text-foreground font-medium"
+                      className="hover:bg-accent rounded-none"
+                      activeClassName="border-l-2 border-foreground text-foreground font-semibold"
                     >
                       <item.icon className="mr-2 h-4 w-4" />
                       {!collapsed && <span>{item.title}</span>}
