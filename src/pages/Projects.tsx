@@ -6,6 +6,7 @@ import { tr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Tables, TablesInsert } from "@/integrations/supabase/types";
+import { Currency, currencies, currencyConfig, fmtMoney } from "@/lib/currency";
 import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,9 +45,9 @@ const filters: { value: string; label: string }[] = [
   { value: "ödendi", label: "Ödendi" },
 ];
 
-const formatPrice = (n: number | null) => {
+const formatPrice = (n: number | null, currency: Currency = "TRY") => {
   if (n == null) return "—";
-  return n.toLocaleString("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + " ₺";
+  return fmtMoney(n, currency);
 };
 
 const formatDate = (d: string | null) => {
@@ -54,7 +55,7 @@ const formatDate = (d: string | null) => {
   return format(new Date(d), "dd.MM.yyyy");
 };
 
-const emptyForm = { title: "", client_id: "", price: "", deadline: undefined as Date | undefined, status: "taslak" as ProjectStatus };
+const emptyForm = { title: "", client_id: "", price: "", deadline: undefined as Date | undefined, status: "taslak" as ProjectStatus, currency: "TRY" as Currency };
 
 const Projects = () => {
   const { user } = useAuth();
