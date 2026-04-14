@@ -7,6 +7,7 @@ import { tr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Tables, TablesInsert } from "@/integrations/supabase/types";
+import { Currency, currencies, currencyConfig, fmtMoneyFull } from "@/lib/currency";
 import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,8 +50,7 @@ const filters = [
   { value: "overdue", label: "Gecikmiş" },
 ];
 
-const fmtAmount = (n: number) =>
-  n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " ₺";
+const fmtAmount = (n: number, currency: Currency = "TRY") => fmtMoneyFull(n, currency);
 
 const fmtDate = (d: string | null) => {
   if (!d) return "—";
@@ -66,6 +66,7 @@ const generateInvoiceNo = (existingCount: number) => {
 const emptyForm = {
   project_id: "",
   amount: "",
+  currency: "TRY" as Currency,
   issue_date: new Date(),
   due_date: addDays(new Date(), 14),
   description: "",
