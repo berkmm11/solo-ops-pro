@@ -69,6 +69,7 @@ const Projects = () => {
   const [form, setForm] = useState(emptyForm);
   const [filter, setFilter] = useState("all");
   const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const { data: projects = [], isLoading } = useQuery({
     queryKey: ["projects"],
@@ -120,6 +121,15 @@ const Projects = () => {
     onError: () => toast.error("Bir hata oluştu"),
   });
 
+  const requestDelete = (p: Project) => {
+    setDeleteTarget(p);
+    setDeleteDialogOpen(true);
+  };
+
+  const closeDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+  };
+
   const deleteMutation = useMutation({
     mutationFn: async (projectId: string) => {
       // Delete linked invoices first
@@ -128,13 +138,13 @@ const Projects = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      setDeleteTarget(null);
+      closeDeleteDialog();
       toast.success("Proje silindi");
       setTimeout(() => {
         queryClient.invalidateQueries({ queryKey: ["projects"] });
         queryClient.invalidateQueries({ queryKey: ["dashboard-projects"] });
         queryClient.invalidateQueries({ queryKey: ["dashboard-invoices"] });
-      }, 150);
+      }, 300);
     },
     onError: () => toast.error("Silme sırasında hata oluştu"),
   });
@@ -229,7 +239,7 @@ const Projects = () => {
                 >
                   <button
                     type="button"
-                    onClick={(e) => { e.stopPropagation(); setDeleteTarget(p); }}
+                    onClick={(e) => { e.stopPropagation(); requestDelete(p); }}
                     className="absolute top-3 right-3 p-1.5 rounded-md text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                     title="Projeyi sil"
                   >
@@ -357,7 +367,7 @@ const Projects = () => {
         </Dialog>
 
         {/* Delete Confirmation */}
-        <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialog open={deleteDialogOpen} onOpenChange={(v) => { if (!v) closeDeleteDialog(); }}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Bu projeyi silmek istediğinize emin misiniz?</AlertDialogTitle>
