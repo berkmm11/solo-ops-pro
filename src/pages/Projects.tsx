@@ -353,6 +353,27 @@ const Projects = () => {
             </form>
           </DialogContent>
         </Dialog>
+
+        {/* Delete Confirmation */}
+        <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Bu projeyi silmek istediğinize emin misiniz?</AlertDialogTitle>
+              <AlertDialogDescription>
+                "{deleteTarget?.title}" projesi ve bağlı faturaları kalıcı olarak silinecek. Bu işlem geri alınamaz.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Vazgeç</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                Sil
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AppLayout>
   );
