@@ -231,31 +231,51 @@ const Dashboard = () => {
                         endAngle={-270}
                         animationBegin={0}
                         animationDuration={800}
+                        cursor="pointer"
+                        onClick={(_: any, index: number) => toggleFilter(donutData[index].status)}
                       >
                         {donutData.map((entry, i) => (
-                          <Cell key={i} fill={entry.color} stroke="none" />
+                          <Cell
+                            key={i}
+                            fill={entry.color}
+                            stroke="none"
+                            opacity={statusFilter && statusFilter !== entry.status ? 0.25 : 1}
+                            style={{
+                              transform: statusFilter === entry.status ? "scale(1.08)" : "scale(1)",
+                              transformOrigin: "center",
+                              transition: "opacity 0.3s, transform 0.3s",
+                            }}
+                          />
                         ))}
                       </Pie>
                     </PieChart>
                   </ResponsiveContainer>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-3xl font-bold text-foreground">{mockProjects.length}</span>
+                    <span className="text-3xl font-bold text-foreground">{filteredProjects.length}</span>
                     <span className="text-xs text-muted-foreground">Proje</span>
                   </div>
                 </div>
                 <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 mt-4">
                   {donutData.map((d) => (
-                    <div key={d.name} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <button
+                      key={d.name}
+                      onClick={() => toggleFilter(d.status)}
+                      className={`flex items-center gap-1.5 text-xs transition-opacity duration-300 ${
+                        statusFilter && statusFilter !== d.status
+                          ? "opacity-40 text-muted-foreground"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
                       <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: d.color }} />
                       {d.name} ({d.value})
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>
 
               {/* Project List */}
               <div className="space-y-2">
-                {mockProjects.map((p) => {
+                {filteredProjects.map((p) => {
                   const sc = projectStatusConfig[p.status];
                   const currSymbol = p.currency === "USD" ? "$" : p.currency === "EUR" ? "€" : "₺";
                   return (
