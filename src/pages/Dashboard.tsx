@@ -32,6 +32,7 @@ const Dashboard = () => {
   const queryClient = useQueryClient();
   const [giderOpen, setGiderOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [heroCurrency, setHeroCurrency] = useState<"TRY" | "USD" | "EUR">("TRY");
   const { data: rates, isLoading: ratesLoading } = useExchangeRates();
 
   // ── Fetch real data ──
