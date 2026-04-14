@@ -79,9 +79,6 @@ const ProjectStatusDonut = ({ activeStatus, data, onSelect }: ProjectStatusDonut
         })}
       </svg>
     );
-  }
-);
-
-ProjectStatusDonut.displayName = "ProjectStatusDonut";
+};
 
 export default ProjectStatusDonut;
