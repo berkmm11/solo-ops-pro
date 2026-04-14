@@ -71,6 +71,30 @@ const Dashboard = () => {
   const [invoiceModal, setInvoiceModal] = useState<MockProject | null>(null);
   const active = currencies[activeCurrency];
 
+  // Sync paid state from localStorage (set by /pay/:id page)
+  useEffect(() => {
+    const syncPaid = () => {
+      setProjects((prev) =>
+        prev.map((p) => {
+          if (p.status === "invoiced") {
+            const key = `soloops_paid_${p.id}`;
+            if (localStorage.getItem(key) === "true") {
+              return { ...p, status: "paid" };
+            }
+          }
+          return p;
+        })
+      );
+    };
+    syncPaid();
+    window.addEventListener("storage", syncPaid);
+    window.addEventListener("focus", syncPaid);
+    return () => {
+      window.removeEventListener("storage", syncPaid);
+      window.removeEventListener("focus", syncPaid);
+    };
+  }, []);
+
   const donutData = useMemo(() => {
     const counts: Record<string, number> = {};
     projects.forEach((p) => { counts[p.status] = (counts[p.status] || 0) + 1; });
