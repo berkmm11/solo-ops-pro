@@ -1,11 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import AppLayout from "@/components/AppLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { Receipt, Landmark, Building2, Wifi, Monitor, Calculator, ChevronDown, ChevronUp, Wallet, HandCoins, TrendingUp, FolderKanban, FileText } from "lucide-react";
+import { Receipt, Landmark, Building2, Wifi, Monitor, Calculator, ChevronDown, ChevronUp, Wallet, HandCoins, TrendingUp, FolderKanban, FileText, Link2, ExternalLink } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { toast } from "sonner";
 
@@ -70,6 +70,30 @@ const Dashboard = () => {
   const [projects, setProjects] = useState(initialProjects);
   const [invoiceModal, setInvoiceModal] = useState<MockProject | null>(null);
   const active = currencies[activeCurrency];
+
+  // Sync paid state from localStorage (set by /pay/:id page)
+  useEffect(() => {
+    const syncPaid = () => {
+      setProjects((prev) =>
+        prev.map((p) => {
+          if (p.status === "invoiced") {
+            const key = `soloops_paid_${p.id}`;
+            if (localStorage.getItem(key) === "true") {
+              return { ...p, status: "paid" };
+            }
+          }
+          return p;
+        })
+      );
+    };
+    syncPaid();
+    window.addEventListener("storage", syncPaid);
+    window.addEventListener("focus", syncPaid);
+    return () => {
+      window.removeEventListener("storage", syncPaid);
+      window.removeEventListener("focus", syncPaid);
+    };
+  }, []);
 
   const donutData = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -312,6 +336,36 @@ const Dashboard = () => {
                       <span className="font-medium text-foreground whitespace-nowrap">
                         {currSymbol}{fmt(p.budget)}
                       </span>
+                      {p.status === "invoiced" && (
+                        <div className="flex items-center gap-0.5 ml-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            title="Ödeme Linki Kopyala"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const link = `${window.location.origin}/pay/${p.id}`;
+                              navigator.clipboard.writeText(link);
+                              toast.success("Link kopyalandı!");
+                            }}
+                          >
+                            <Link2 className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            title="Önizle"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.open(`/pay/${p.id}`, "_blank");
+                            }}
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      )}
                       {p.status === "completed" && (
                         <Button
                           variant="outline"

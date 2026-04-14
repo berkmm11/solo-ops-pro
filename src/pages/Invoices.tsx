@@ -28,7 +28,7 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { FileText, Plus, CalendarIcon, MoreHorizontal, Pencil, Trash2, CheckCircle } from "lucide-react";
+import { FileText, Plus, CalendarIcon, MoreHorizontal, Pencil, Trash2, CheckCircle, Link2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -281,26 +281,58 @@ const Invoices = () => {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()}>
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            {inv.status !== "paid" && (
-                              <DropdownMenuItem onClick={() => markPaid.mutate(inv.id)}>
-                                <CheckCircle className="mr-2 h-4 w-4" /> Ödendi İşaretle
+                        <div className="flex items-center gap-1">
+                          {inv.status === "pending" && (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                title="Ödeme Linki Kopyala"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const link = `${window.location.origin}/pay/${inv.id}`;
+                                  navigator.clipboard.writeText(link);
+                                  toast.success("Link kopyalandı!");
+                                }}
+                              >
+                                <Link2 className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                title="Önizle"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.open(`/pay/${inv.id}`, "_blank");
+                                }}
+                              >
+                                <ExternalLink className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()}>
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              {inv.status !== "paid" && (
+                                <DropdownMenuItem onClick={() => markPaid.mutate(inv.id)}>
+                                  <CheckCircle className="mr-2 h-4 w-4" /> Ödendi İşaretle
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={() => remove.mutate(inv.id)}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" /> Sil
                               </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem
-                              className="text-destructive"
-                              onClick={() => remove.mutate(inv.id)}
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" /> Sil
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
