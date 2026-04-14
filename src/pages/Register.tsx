@@ -124,7 +124,7 @@ const Register = () => {
                 required
               />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full" disabled={loading || !getPasswordValid(password)}>
               {loading ? "Kayıt yapılıyor..." : "Kayıt Ol"}
             </Button>
           </form>
