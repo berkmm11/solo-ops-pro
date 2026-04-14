@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
+import PasswordStrength, { getPasswordValid } from "@/components/PasswordStrength";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
@@ -111,6 +112,7 @@ const Register = () => {
                 placeholder="••••••••"
                 required
               />
+              <PasswordStrength password={password} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Şifre Tekrar</Label>
@@ -122,7 +124,7 @@ const Register = () => {
                 required
               />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full" disabled={loading || !getPasswordValid(password)}>
               {loading ? "Kayıt yapılıyor..." : "Kayıt Ol"}
             </Button>
           </form>
