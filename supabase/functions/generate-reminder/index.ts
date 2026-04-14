@@ -7,6 +7,15 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const tonePrompts: Record<string, string> = {
+  gentle:
+    "Sen Türkiye'de freelance çalışan bir kişi için ödeme hatırlatma maili yazıyorsun. Çok nazik ve anlayışlı bir ton kullan — ilk hatırlatma gibi yumuşak ol. 'Unuttuysanız hatırlatmak isterim' tarzında başla. Müşteriyi kesinlikle rencide etme, empati kur. 4-5 cümle Türkçe. Selamlama, nazik hatırlatma, anlayışlı kapanış.",
+  professional:
+    "Sen Türkiye'de freelance çalışan bir kişi için ödeme hatırlatma maili yazıyorsun. Profesyonel ve net bir ton kullan — standart iş yazışması gibi kararlı ama saygılı. 'Faturanızın vadesi geçti, ödemenizi rica ederim' tarzında. 4-5 cümle Türkçe profesyonel. Selamlama, kısa hatırlatma, beklentinin net ifadesi, kapanış.",
+  firm:
+    "Sen Türkiye'de freelance çalışan bir kişi için ödeme hatırlatma maili yazıyorsun. Ciddi ve kararlı bir ton kullan — çok gecikmiş bir durum için direkt ve kesin ol. 'Ödeme yükümlülüğünüzü yerine getirmenizi önemle rica ederim' tarzında. Nazik ama çok ciddi. Gecikmenin sonuçlarına ima yap. 4-5 cümle Türkçe.",
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -27,13 +36,15 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
 
-    const { invoice_id } = await req.json();
+    const { invoice_id, tone = "professional" } = await req.json();
     if (!invoice_id) {
       return new Response(JSON.stringify({ error: "invoice_id gerekli." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    const systemPrompt = tonePrompts[tone] || tonePrompts.professional;
 
     const { data: invoice, error: invErr } = await supabase
       .from("invoices")
@@ -53,9 +64,8 @@ serve(async (req) => {
     );
 
     const clientName = (invoice as any).clients?.name || "Müşteri";
-    const amount = invoice.amount
-      .toLocaleString("tr-TR", { minimumFractionDigits: 2 })
-      + " ₺";
+    const amount =
+      invoice.amount.toLocaleString("tr-TR", { minimumFractionDigits: 2 }) + " ₺";
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -76,44 +86,40 @@ serve(async (req) => {
         body: JSON.stringify({
           model: "google/gemini-3-flash-preview",
           messages: [
-            {
-              role: "system",
-              content:
-                "Sen Türkiye'de freelance çalışan bir kişi için ödeme hatırlatma maili yazıyorsun. Nazik ama kararlı ton. 4-5 cümle Türkçe profesyonel. Selamlama, kısa hatırlatma, beklentinin net ifadesi, kapanış. Rencide etme ama ciddiyet kaybetme.",
-            },
+            { role: "system", content: systemPrompt },
             {
               role: "user",
               content: `Müşteri: ${clientName}, Fatura no: ${invoice.invoice_no}, Tutar: ${amount}, Vade: ${invoice.due_date}, Gecikme: ${daysOverdue} gün. Bu müşteri için ödeme hatırlatma maili yaz.`,
             },
           ],
-          max_tokens: 500,
+          max_tokens: 700,
         }),
       }
     );
 
     if (!aiResponse.ok) {
       if (aiResponse.status === 429) {
-        return new Response(JSON.stringify({ error: "AI servisi şu an yoğun, lütfen biraz bekleyip tekrar deneyin." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return new Response(
+          JSON.stringify({ error: "AI servisi şu an yoğun, lütfen biraz bekleyip tekrar deneyin." }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
       }
       if (aiResponse.status === 402) {
-        return new Response(JSON.stringify({ error: "AI kredisi yetersiz. Lütfen yöneticinize başvurun." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return new Response(
+          JSON.stringify({ error: "AI kredisi yetersiz. Lütfen yöneticinize başvurun." }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
       }
       const errText = await aiResponse.text();
       console.error("AI gateway error:", aiResponse.status, errText);
-      return new Response(JSON.stringify({ error: "AI servisi yanıt veremedi." }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: "AI servisi yanıt veremedi." }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const aiData = await aiResponse.json();
-    const message = aiData.choices?.[0]?.message?.content || "";
+    const message = aiData.choices?.[0]?.message?.content || "Hatırlatma oluşturulamadı, lütfen tekrar deneyin.";
 
     return new Response(JSON.stringify({ message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -122,10 +128,7 @@ serve(async (req) => {
     console.error("generate-reminder error:", e);
     return new Response(
       JSON.stringify({ error: e instanceof Error ? e.message : "Bilinmeyen hata" }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
