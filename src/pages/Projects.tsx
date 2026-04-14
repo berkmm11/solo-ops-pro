@@ -66,6 +66,7 @@ const Projects = () => {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Project | null>(null);
+  const [form, setForm] = useState(emptyForm);
   const [filter, setFilter] = useState("all");
   const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
 
