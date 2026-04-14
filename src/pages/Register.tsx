@@ -112,7 +112,7 @@ const Register = () => {
                 placeholder="••••••••"
                 required
               />
-            </div>
+              <PasswordStrength password={password} />
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Şifre Tekrar</Label>
               <PasswordInput
