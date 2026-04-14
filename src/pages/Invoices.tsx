@@ -122,7 +122,6 @@ const Invoices = () => {
 
   const createInvoice = useMutation({
     mutationFn: async (values: typeof form) => {
-      // Count existing invoices this year for invoice_no
       const year = new Date().getFullYear();
       const { count, error: countErr } = await supabase
         .from("invoices")
@@ -147,13 +146,15 @@ const Invoices = () => {
         status: "pending",
         currency: values.currency,
       };
-      const { error } = await supabase.from("invoices").insert(insert);
+      const { data, error } = await supabase.from("invoices").insert(insert).select("id").single();
       if (error) throw error;
+      return data.id as string;
     },
-    onSuccess: () => {
+    onSuccess: (newId) => {
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
       toast.success("Fatura oluşturuldu");
       closeModal();
+      navigate(`/fatura/${newId}`);
     },
     onError: () => toast.error("Bir hata oluştu"),
   });

@@ -1,15 +1,23 @@
+import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
+import { Currency, fmtMoneyFull } from "@/lib/currency";
 import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FileDown, Pencil, ChevronRight } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import { FileDown, Pencil, ChevronRight, Send, MessageCircle, Mail, Copy, User, Building2, Phone, AtSign } from "lucide-react";
 import { cn } from "@/lib/utils";
 import AiReminderSection from "@/components/AiReminderSection";
+import { toast } from "sonner";
 
 type InvoiceStatus = "pending" | "paid" | "overdue";
 
@@ -27,6 +35,9 @@ const fmtDate = (d: string | null) => (d ? format(new Date(d), "dd.MM.yyyy") : "
 const InvoiceDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const { profile } = useProfile();
+  const [paymentOpen, setPaymentOpen] = useState(false);
+  const [paymentMsg, setPaymentMsg] = useState("");
 
   const { data: invoice, isLoading } = useQuery({
     queryKey: ["invoice", id],
@@ -63,12 +74,44 @@ const InvoiceDetail = () => {
 
   const client = (invoice as any).clients;
   const project = (invoice as any).projects;
+  const currency = ((invoice as any).currency || "TRY") as Currency;
   const amount = invoice.amount;
   const kdv = amount * 0.2;
   const stopaj = amount * 0.2;
   const araToplam = amount;
   const genelToplam = amount + kdv - stopaj;
   const sc = statusConfig[invoice.status as InvoiceStatus];
+
+  const fmtC = (n: number) => fmtMoneyFull(n, currency);
+
+  const buildPaymentMessage = () => {
+    const clientName = client?.name || "Sayın Müşterimiz";
+    const iban = profile?.iban || "[IBAN bilgisi profilde belirtilmemiş]";
+    const bankName = profile?.bank_name ? ` (${profile.bank_name})` : "";
+    return `Merhaba ${clientName},\n\n${invoice.invoice_no} numaralı ${fmtC(amount)} tutarındaki faturanız hazırlanmıştır.\n\nÖdeme bilgileri:\nIBAN: ${iban}${bankName}\nAlıcı: ${profile?.full_name || user?.email || "—"}\n\nVade tarihi: ${fmtDate(invoice.due_date)}\n\nTeşekkür ederiz.`;
+  };
+
+  const openPaymentPanel = () => {
+    setPaymentMsg(buildPaymentMessage());
+    setPaymentOpen(true);
+  };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(paymentMsg);
+    toast.success("Kopyalandı!");
+  };
+
+  const handleWhatsApp = () => {
+    const phone = client?.phone?.replace(/\D/g, "") || "";
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(paymentMsg)}`;
+    window.open(url, "_blank");
+  };
+
+  const handleMail = () => {
+    const subject = `${invoice.invoice_no} - Fatura Ödeme Bilgileri`;
+    const mailto = `mailto:${client?.email || ""}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(paymentMsg)}`;
+    window.open(mailto);
+  };
 
   return (
     <AppLayout>
@@ -88,76 +131,83 @@ const InvoiceDetail = () => {
             </Badge>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/invoices">
-                <Pencil className="mr-2 h-4 w-4" />
-                Düzenle
-              </Link>
-            </Button>
+            {invoice.status !== "paid" && (
+              <Button size="sm" variant="outline" onClick={openPaymentPanel}>
+                <Send className="mr-2 h-4 w-4" />
+                Ödeme Bilgileri Gönder
+              </Button>
+            )}
             <Button size="sm" onClick={() => window.print()}>
               <FileDown className="mr-2 h-4 w-4" />
               PDF İndir
             </Button>
           </div>
         </div>
+
+        {/* Fatura Edilen card */}
+        {client && (
+          <div className="border border-border rounded-xl p-5 mb-6 bg-background">
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">Fatura Edilen</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4 text-muted-foreground" />
+                <span className="font-semibold">{client.name}</span>
+              </div>
+              {client.email && (
+                <div className="flex items-center gap-2">
+                  <AtSign className="h-4 w-4 text-muted-foreground" />
+                  <span>{client.email}</span>
+                </div>
+              )}
+              {client.phone && (
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <span>{client.phone}</span>
+                </div>
+              )}
+              {client.tax_no && (
+                <div className="flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-muted-foreground" />
+                  <span>VKN: {client.tax_no}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* ══════════════════════════════════════════════════
-          STANDARD INVOICE DOCUMENT
-          Font: system sans-serif (Arial-like)
-          Colors: black text, white bg, gray borders only
-         ══════════════════════════════════════════════════ */}
+      {/* ── INVOICE DOCUMENT ── */}
       <div
         className="max-w-[800px] mx-auto bg-white border border-[#d1d5db] rounded print:border-none print:rounded-none print:shadow-none print:max-w-none print:p-0"
         style={{ fontFamily: "Arial, Helvetica, sans-serif", color: "#111" }}
       >
         <div className="p-10 print:p-8">
-          {/* ── HEADER ── */}
+          {/* HEADER */}
           <div className="flex justify-between items-start border-b-2 border-[#111] pb-6 mb-8">
-            {/* Sender */}
             <div className="text-sm leading-relaxed">
               <p className="text-base font-bold mb-1">
-                {user?.user_metadata?.full_name || user?.email || "—"}
+                {profile?.full_name || user?.email || "—"}
               </p>
-              {user?.user_metadata?.address && (
-                <p className="text-[#555]">{user.user_metadata.address}</p>
-              )}
-              {user?.user_metadata?.tax_no && (
-                <p className="text-[#555]">VKN: {user.user_metadata.tax_no}</p>
-              )}
-              {user?.phone && <p className="text-[#555]">{user.phone}</p>}
+              {profile?.address && <p className="text-[#555]">{profile.address}</p>}
+              {profile?.tax_no && <p className="text-[#555]">VKN: {profile.tax_no}</p>}
+              {profile?.phone && <p className="text-[#555]">{profile.phone}</p>}
               <p className="text-[#555]">{user?.email}</p>
             </div>
-
-            {/* Invoice title + meta */}
             <div className="text-right">
-              <h2 className="text-[36px] font-bold tracking-tight leading-none mb-3">
-                FATURA
-              </h2>
+              <h2 className="text-[36px] font-bold tracking-tight leading-none mb-3">FATURA</h2>
               <table className="ml-auto text-sm">
                 <tbody>
-                  <tr>
-                    <td className="text-[#555] pr-3 py-0.5 text-right">Fatura No:</td>
-                    <td className="font-semibold text-right">{invoice.invoice_no}</td>
-                  </tr>
-                  <tr>
-                    <td className="text-[#555] pr-3 py-0.5 text-right">Tarih:</td>
-                    <td className="font-semibold text-right">{fmtDate(invoice.issue_date)}</td>
-                  </tr>
-                  <tr>
-                    <td className="text-[#555] pr-3 py-0.5 text-right">Vade:</td>
-                    <td className="font-semibold text-right">{fmtDate(invoice.due_date)}</td>
-                  </tr>
+                  <tr><td className="text-[#555] pr-3 py-0.5 text-right">Fatura No:</td><td className="font-semibold text-right">{invoice.invoice_no}</td></tr>
+                  <tr><td className="text-[#555] pr-3 py-0.5 text-right">Tarih:</td><td className="font-semibold text-right">{fmtDate(invoice.issue_date)}</td></tr>
+                  <tr><td className="text-[#555] pr-3 py-0.5 text-right">Vade:</td><td className="font-semibold text-right">{fmtDate(invoice.due_date)}</td></tr>
                 </tbody>
               </table>
             </div>
           </div>
 
-          {/* ── CLIENT INFO ── */}
+          {/* CLIENT INFO */}
           <div className="mb-8">
-            <p className="text-xs font-bold uppercase tracking-widest text-[#888] mb-2">
-              Fatura Edilen:
-            </p>
+            <p className="text-xs font-bold uppercase tracking-widest text-[#888] mb-2">Fatura Edilen:</p>
             <div className="text-sm leading-relaxed">
               <p className="font-bold text-base">{client?.name || "—"}</p>
               {client?.tax_no && <p className="text-[#555]">VKN: {client.tax_no}</p>}
@@ -166,7 +216,7 @@ const InvoiceDetail = () => {
             </div>
           </div>
 
-          {/* ── LINE ITEMS TABLE ── */}
+          {/* LINE ITEMS */}
           <table className="w-full text-sm border-collapse mb-8">
             <thead>
               <tr className="bg-[#f3f4f6]">
@@ -187,66 +237,59 @@ const InvoiceDetail = () => {
                   )}
                 </td>
                 <td className="border border-[#d1d5db] px-3 py-2.5 text-center">1</td>
-                <td className="border border-[#d1d5db] px-3 py-2.5 text-right">{fmt(amount)} ₺</td>
-                <td className="border border-[#d1d5db] px-3 py-2.5 text-right font-semibold">{fmt(amount)} ₺</td>
+                <td className="border border-[#d1d5db] px-3 py-2.5 text-right">{fmtC(amount)}</td>
+                <td className="border border-[#d1d5db] px-3 py-2.5 text-right font-semibold">{fmtC(amount)}</td>
               </tr>
             </tbody>
           </table>
 
-          {/* ── TOTALS ── */}
+          {/* TOTALS */}
           <div className="flex justify-end mb-10">
             <table className="text-sm w-[300px]">
               <tbody>
-                <tr>
-                  <td className="py-1.5 text-[#555]">Ara Toplam:</td>
-                  <td className="py-1.5 text-right font-medium">{fmt(araToplam)} ₺</td>
-                </tr>
-                <tr>
-                  <td className="py-1.5 text-[#555]">KDV (%20):</td>
-                  <td className="py-1.5 text-right font-medium">+{fmt(kdv)} ₺</td>
-                </tr>
-                <tr>
-                  <td className="py-1.5 text-[#555]">Stopaj (%20):</td>
-                  <td className="py-1.5 text-right font-medium">-{fmt(stopaj)} ₺</td>
-                </tr>
+                <tr><td className="py-1.5 text-[#555]">Ara Toplam:</td><td className="py-1.5 text-right font-medium">{fmtC(araToplam)}</td></tr>
+                {currency === "TRY" && (
+                  <>
+                    <tr><td className="py-1.5 text-[#555]">KDV (%20):</td><td className="py-1.5 text-right font-medium">+{fmtC(kdv)}</td></tr>
+                    <tr><td className="py-1.5 text-[#555]">Stopaj (%20):</td><td className="py-1.5 text-right font-medium">-{fmtC(stopaj)}</td></tr>
+                  </>
+                )}
                 <tr className="border-t-2 border-[#111]">
                   <td className="pt-3 pb-1 font-bold text-base">GENEL TOPLAM:</td>
-                  <td className="pt-3 pb-1 text-right font-bold text-lg">{fmt(genelToplam)} ₺</td>
+                  <td className="pt-3 pb-1 text-right font-bold text-lg">{fmtC(currency === "TRY" ? genelToplam : amount)}</td>
                 </tr>
               </tbody>
             </table>
           </div>
 
-          {/* ── FOOTER / PAYMENT INFO ── */}
+          {/* PAYMENT INFO */}
           <div className="border-t border-[#d1d5db] pt-6 text-sm">
-            <p className="text-xs font-bold uppercase tracking-widest text-[#888] mb-3">
-              Ödeme Bilgileri
-            </p>
+            <p className="text-xs font-bold uppercase tracking-widest text-[#888] mb-3">Ödeme Bilgileri</p>
             <div className="leading-relaxed text-[#555]">
-              {user?.user_metadata?.iban ? (
+              {profile?.iban ? (
                 <>
-                  <p>IBAN: <span className="font-semibold text-[#111]">{user.user_metadata.iban}</span></p>
-                  {user?.user_metadata?.bank && (
-                    <p>Banka: <span className="font-semibold text-[#111]">{user.user_metadata.bank}</span></p>
+                  <p>IBAN: <span className="font-semibold text-[#111]">{profile.iban}</span></p>
+                  {profile.bank_name && (
+                    <p>Banka: <span className="font-semibold text-[#111]">{profile.bank_name}</span></p>
                   )}
                 </>
               ) : (
-                <p className="italic text-[#999]">
-                  Ödeme bilgileri profil ayarlarından eklenebilir.
-                </p>
+                <p className="italic text-[#999]">Ödeme bilgileri profil ayarlarından eklenebilir.</p>
               )}
             </div>
             <p className="text-xs text-[#999] mt-4">
               Ödeme vadesi {fmtDate(invoice.due_date)} tarihine kadardır. Gecikmeli ödemelerde yasal faiz uygulanır.
             </p>
-            <p className="text-[10px] text-[#bbb] mt-2">
-              Stopaj gelir vergisi avansıdır ve müşteri tarafından vergi dairesine beyan edilir.
-            </p>
+            {currency === "TRY" && (
+              <p className="text-[10px] text-[#bbb] mt-2">
+                Stopaj gelir vergisi avansıdır ve müşteri tarafından vergi dairesine beyan edilir.
+              </p>
+            )}
           </div>
         </div>
       </div>
 
-      {/* ── AI Reminder (overdue only, screen only) ── */}
+      {/* AI Reminder (overdue only) */}
       {invoice.status === "overdue" && (
         <AiReminderSection
           invoiceId={invoice.id}
@@ -255,6 +298,41 @@ const InvoiceDetail = () => {
           clientEmail={client?.email || null}
         />
       )}
+
+      {/* Payment Send Dialog */}
+      <Dialog open={paymentOpen} onOpenChange={setPaymentOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Ödeme Bilgileri Gönder</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Textarea
+              value={paymentMsg}
+              onChange={(e) => setPaymentMsg(e.target.value)}
+              rows={10}
+              className="text-sm"
+            />
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" onClick={handleCopy}>
+                <Copy className="mr-2 h-4 w-4" />
+                Kopyala
+              </Button>
+              {client?.phone && (
+                <Button variant="outline" size="sm" onClick={handleWhatsApp} className="text-[#25D366]">
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  WhatsApp'tan Gönder
+                </Button>
+              )}
+              {client?.email && (
+                <Button variant="outline" size="sm" onClick={handleMail}>
+                  <Mail className="mr-2 h-4 w-4" />
+                  Mail Olarak Aç
+                </Button>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 };
