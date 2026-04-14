@@ -314,6 +314,11 @@ const Dashboard = () => {
               )}
               <p className="text-sm opacity-75 mt-3">
                 Harcanabilir: ₺{fmt(harcanabilir)}
+                {rates && harcanabilir > 0 && (
+                  <span className="ml-1">
+                    (${fmt(harcanabilir / rates.USD)} · €{fmt(harcanabilir / rates.EUR)})
+                  </span>
+                )}
               </p>
             </div>
 
