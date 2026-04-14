@@ -186,8 +186,13 @@ const Dashboard = () => {
     toast.success("Veriler güncelleniyor...");
   };
 
+  const foreignSubtitle = useMemo(() => {
+    const parts = Object.entries(pendingForeign).map(([c, amt]) => fmtMoney(amt, c as Currency));
+    return parts.length > 0 ? `(${parts.join(" + ")} ayrıca bekliyor)` : null;
+  }, [pendingForeign]);
+
   const statCards = [
-    { title: "Toplam Alacak", icon: HandCoins, value: `₺${fmt(totalAlacak)}` },
+    { title: "Toplam Alacak (₺)", icon: HandCoins, value: `₺${fmt(totalAlacakTRY)}` },
     { title: "Bu Ay Kazanç", icon: TrendingUp, value: `₺${fmt(buAyKazanc)}` },
     { title: "Aktif Projeler", icon: FolderKanban, value: String(aktifProjeSayisi) },
   ];
