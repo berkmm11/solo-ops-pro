@@ -2,6 +2,7 @@ import { LayoutDashboard, Users, FolderKanban, FileText, Receipt, LogOut } from 
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import ThemeToggle from "@/components/ThemeToggle";
 import {
   Sidebar,
   SidebarContent,
@@ -52,7 +53,7 @@ export function AppSidebar() {
                     <NavLink
                       to={item.url}
                       end
-                      className="hover:bg-accent rounded-none"
+                      className="hover:bg-accent/20 rounded-none"
                       activeClassName="border-l-2 border-foreground text-foreground font-semibold"
                     >
                       <item.icon className="mr-2 h-4 w-4" />
@@ -66,13 +67,16 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-border">
+      <SidebarFooter className="p-4 border-t border-border space-y-2">
+        <div className="flex items-center justify-between">
+          <ThemeToggle />
+        </div>
         {!collapsed && user && (
-          <p className="text-xs text-muted-foreground truncate mb-2">
+          <p className="text-xs text-muted-foreground truncate">
             {user.email}
           </p>
         )}
-        <SidebarMenuButton onClick={signOut} className="hover:bg-accent">
+        <SidebarMenuButton onClick={signOut} className="hover:bg-accent/20">
           <LogOut className="mr-2 h-4 w-4" />
           {!collapsed && <span>Çıkış Yap</span>}
         </SidebarMenuButton>
