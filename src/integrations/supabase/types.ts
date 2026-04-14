@@ -50,6 +50,50 @@ export type Database = {
         }
         Relationships: []
       }
+      projects: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          deadline: string | null
+          id: string
+          price: number | null
+          status: Database["public"]["Enums"]["project_status"]
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          deadline?: string | null
+          id?: string
+          price?: number | null
+          status?: Database["public"]["Enums"]["project_status"]
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          deadline?: string | null
+          id?: string
+          price?: number | null
+          status?: Database["public"]["Enums"]["project_status"]
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -58,6 +102,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      project_status: "taslak" | "aktif" | "faturalandı" | "ödendi"
       trust_score: "A" | "B" | "C"
     }
     CompositeTypes: {
@@ -186,6 +231,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      project_status: ["taslak", "aktif", "faturalandı", "ödendi"],
       trust_score: ["A", "B", "C"],
     },
   },

@@ -43,10 +43,10 @@ const Clients = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("clients")
-        .select("*")
+        .select("*, projects(id)")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data as Client[];
+      return data;
     },
     enabled: !!user,
   });
@@ -152,7 +152,7 @@ const Clients = () => {
                     <TableCell className="font-medium">{c.name}</TableCell>
                     <TableCell>{c.phone || "—"}</TableCell>
                     <TableCell>{c.tax_no || "—"}</TableCell>
-                    <TableCell>0</TableCell>
+                    <TableCell>{(c as any).projects?.length ?? 0}</TableCell>
                     <TableCell>
                       <Badge variant="secondary" className={trustBadge[c.trust_score].className}>
                         {trustBadge[c.trust_score].label}
