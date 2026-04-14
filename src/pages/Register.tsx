@@ -19,7 +19,7 @@ const Register = () => {
   const { session } = useAuth();
   const { toast } = useToast();
 
-  if (session) return <Navigate to="/dashboard" replace />;
+  if (session) return <Navigate to="/hosgeldin" replace />;
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
