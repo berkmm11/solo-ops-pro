@@ -336,6 +336,36 @@ const Dashboard = () => {
                       <span className="font-medium text-foreground whitespace-nowrap">
                         {currSymbol}{fmt(p.budget)}
                       </span>
+                      {p.status === "invoiced" && (
+                        <div className="flex items-center gap-0.5 ml-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            title="Ödeme Linki Kopyala"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const link = `${window.location.origin}/pay/${p.id}`;
+                              navigator.clipboard.writeText(link);
+                              toast.success("Link kopyalandı!");
+                            }}
+                          >
+                            <Link2 className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            title="Önizle"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.open(`/pay/${p.id}`, "_blank");
+                            }}
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      )}
                       {p.status === "completed" && (
                         <Button
                           variant="outline"
