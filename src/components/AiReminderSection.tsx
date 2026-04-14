@@ -1,10 +1,13 @@
 import { useState } from "react";
-import { Bot, Loader2, Copy, Check, Mail, MessageCircle } from "lucide-react";
+import { Bot, Loader2, Copy, Mail, MessageCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Tooltip, TooltipContent, TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -14,6 +17,14 @@ interface AiReminderSectionProps {
   clientPhone: string | null;
   clientEmail: string | null;
 }
+
+type Tone = "gentle" | "professional" | "firm";
+
+const toneOptions: { value: Tone; label: string; desc: string; emoji: string }[] = [
+  { value: "gentle", label: "Nazik ve Anlayışlı", desc: "İlk hatırlatma için, yumuşak ton", emoji: "🕊️" },
+  { value: "professional", label: "Profesyonel ve Net", desc: "Standart, kararlı ton", emoji: "💼" },
+  { value: "firm", label: "Ciddi ve Kararlı", desc: "Çok geciken durumlar için, direkt ton", emoji: "⚠️" },
+];
 
 const copyText = async (text: string) => {
   try {
@@ -33,19 +44,24 @@ const copyText = async (text: string) => {
 const AiReminderSection = ({ invoiceId, invoiceNo, clientPhone, clientEmail }: AiReminderSectionProps) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [toneModal, setToneModal] = useState(false);
+  const [selectedTone, setSelectedTone] = useState<Tone>("professional");
+  const [usedTone, setUsedTone] = useState<Tone>("professional");
 
-  const generateReminder = async () => {
+  const generateReminder = async (tone: Tone) => {
+    setToneModal(false);
     setLoading(true);
     setMessage("");
+    setUsedTone(tone);
     try {
       const { data, error } = await supabase.functions.invoke("generate-reminder", {
-        body: { invoice_id: invoiceId },
+        body: { invoice_id: invoiceId, tone },
       });
       if (error) throw error;
       if (data?.error) { toast.error(data.error); return; }
       setMessage(data.message || "");
     } catch (err: any) {
-      toast.error(`Hatırlatma oluşturulamadı: ${err.message || "Bilinmeyen hata"}. Lütfen tekrar deneyin.`);
+      toast.error(`Hatırlatma oluşturulamadı: ${err.message || "Bilinmeyen hata"}`);
     } finally {
       setLoading(false);
     }
@@ -58,15 +74,13 @@ const AiReminderSection = ({ invoiceId, invoiceNo, clientPhone, clientEmail }: A
 
   const handleWhatsApp = () => {
     if (!clientPhone) {
-      toast.error("Bu müşterinin telefon numarası kayıtlı değil. Müşteri bilgilerini güncelle.");
+      toast.error("Bu müşterinin telefon numarası kayıtlı değil.");
       return;
     }
     const clean = clientPhone.replace(/[^0-9]/g, "");
     const normalized = clean.startsWith("0")
       ? "90" + clean.slice(1)
-      : clean.startsWith("90")
-        ? clean
-        : "90" + clean;
+      : clean.startsWith("90") ? clean : "90" + clean;
     window.open(`https://wa.me/${normalized}?text=${encodeURIComponent(message)}`, "_blank");
   };
 
@@ -81,6 +95,7 @@ const AiReminderSection = ({ invoiceId, invoiceNo, clientPhone, clientEmail }: A
   };
 
   const isEmpty = !message.trim();
+  const currentToneLabel = toneOptions.find((t) => t.value === usedTone)?.label;
 
   return (
     <div className="max-w-[800px] mx-auto mt-8 print:hidden">
@@ -93,18 +108,26 @@ const AiReminderSection = ({ invoiceId, invoiceNo, clientPhone, clientEmail }: A
           Müşterine saygılı bir ödeme hatırlatma maili oluştursun.
         </p>
 
-        {!message && (
-          <Button onClick={generateReminder} disabled={loading} size="lg" className="w-full">
-            {loading ? (
-              <><Loader2 className="mr-2 h-4 w-4 animate-spin" />AI hatırlatma hazırlıyor...</>
-            ) : (
-              <><Bot className="mr-2 h-4 w-4" />Hatırlatma Oluştur</>
-            )}
+        {!message && !loading && (
+          <Button onClick={() => setToneModal(true)} size="lg" className="w-full">
+            <Bot className="mr-2 h-4 w-4" />
+            Hatırlatma Oluştur
           </Button>
+        )}
+
+        {loading && (
+          <div className="flex items-center justify-center py-6 text-muted-foreground">
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+            <span className="text-sm">AI hatırlatma hazırlıyor...</span>
+          </div>
         )}
 
         {message && (
           <div className="space-y-4 animate-in fade-in duration-300">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span>Ton: <strong className="text-foreground">{currentToneLabel}</strong></span>
+            </div>
+
             <Textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
@@ -112,20 +135,12 @@ const AiReminderSection = ({ invoiceId, invoiceNo, clientPhone, clientEmail }: A
               className="text-[15px] leading-relaxed"
             />
 
-            {/* Action buttons */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {/* Kopyala */}
-              <Button
-                variant="outline"
-                className="border"
-                disabled={isEmpty}
-                onClick={handleCopy}
-              >
+              <Button variant="outline" disabled={isEmpty} onClick={handleCopy}>
                 <Copy className="mr-2 h-4 w-4" />
                 Kopyala
               </Button>
 
-              {/* WhatsApp */}
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span className="w-full">
@@ -139,18 +154,15 @@ const AiReminderSection = ({ invoiceId, invoiceNo, clientPhone, clientEmail }: A
                     </Button>
                   </span>
                 </TooltipTrigger>
-                {!clientPhone && (
-                  <TooltipContent>Müşteri bilgisi eksik</TooltipContent>
-                )}
+                {!clientPhone && <TooltipContent>Müşteri bilgisi eksik</TooltipContent>}
               </Tooltip>
 
-              {/* Mail */}
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span className="w-full">
                     <Button
                       variant="outline"
-                      className="w-full border"
+                      className="w-full"
                       disabled={isEmpty || !clientEmail}
                       onClick={handleMail}
                     >
@@ -159,9 +171,7 @@ const AiReminderSection = ({ invoiceId, invoiceNo, clientPhone, clientEmail }: A
                     </Button>
                   </span>
                 </TooltipTrigger>
-                {!clientEmail && (
-                  <TooltipContent>Müşteri bilgisi eksik</TooltipContent>
-                )}
+                {!clientEmail && <TooltipContent>Müşteri bilgisi eksik</TooltipContent>}
               </Tooltip>
             </div>
 
@@ -169,14 +179,56 @@ const AiReminderSection = ({ invoiceId, invoiceNo, clientPhone, clientEmail }: A
               Mesajı göndermeden önce gözden geçir ve düzenleyebilirsin.
             </p>
 
-            {/* Regenerate */}
-            <Button variant="ghost" size="sm" onClick={generateReminder} disabled={loading} className="text-muted-foreground">
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Yeniden Oluştur
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setToneModal(true)}
+              disabled={loading}
+              className="text-muted-foreground"
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Farklı Tonla Dene
             </Button>
           </div>
         )}
       </div>
+
+      {/* Tone selection modal */}
+      <Dialog open={toneModal} onOpenChange={setToneModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Hatırlatma Tonu Seç</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 pt-2">
+            {toneOptions.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setSelectedTone(opt.value)}
+                className={`w-full text-left p-4 rounded-lg border-2 transition-colors ${
+                  selectedTone === opt.value
+                    ? "border-foreground bg-accent"
+                    : "border-border hover:border-foreground/30"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">{opt.emoji}</span>
+                  <div>
+                    <p className="font-medium text-sm text-foreground">{opt.label}</p>
+                    <p className="text-xs text-muted-foreground">{opt.desc}</p>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+          <Button
+            className="w-full mt-2"
+            onClick={() => generateReminder(selectedTone)}
+          >
+            <Bot className="mr-2 h-4 w-4" />
+            Oluştur
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
