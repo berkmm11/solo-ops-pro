@@ -1,52 +1,74 @@
 
-# soloops — AI-Powered Business Operations for Turkish Freelancers
 
-## Overview
-A minimalist, grayscale SaaS app with Turkish UI, email/password auth, and a sidebar navigation shell. No database tables yet — just the structure, auth, and empty module pages.
+# AI Logo Tasarımı ve Fatura Özelleştirme Planı
 
-## Design System
-- Pure grayscale palette: white background, #111827 text, #6B7280 secondary, #E5E7EB borders
-- Inter font throughout, no gradients, no shadows, no color
-- Black buttons with white text, subtle hover states
-- Generous whitespace, clean card layouts
+Bu plan, fal.ai API kullanarak iki "Business" özelliği ekler: **AI Logo Oluşturma** ve **AI Fatura Şablonu Özelleştirme**.
 
-## Pages & Components
+---
 
-### Auth Pages
-- **Login** (`/login`) — centered card with email/password fields, "Giriş Yap" button, link to register
-- **Register** (`/register`) — centered card with email/password/confirm fields, "Kayıt Ol" button, link to login
-- Protected route wrapper redirecting unauthenticated users to `/login`
-- Post-login redirect to `/dashboard`
+## Ön Koşul: fal.ai API Key
 
-### App Shell
-- Collapsible sidebar with icon+label navigation using shadcn Sidebar
-- Logo/wordmark "soloops" at top of sidebar
-- Navigation items:
-  - Komuta Merkezi (Dashboard) — `LayoutDashboard` icon
-  - Müşteriler (Clients) — `Users` icon
-  - Projeler (Projects) — `FolderKanban` icon
-  - Faturalar (Invoices) — `FileText` icon
-  - Giderler (Expenses) — `Receipt` icon
-- User email + logout button at sidebar bottom
-- Header with sidebar trigger
+- `secrets--add_secret` ile kullanıcıdan `FAL_API_KEY` istenir
+- Edge function'larda `Deno.env.get("FAL_API_KEY")` olarak kullanılır
 
-### Module Pages (placeholder shells)
-- `/dashboard` — "Komuta Merkezi" heading, empty state message
-- `/clients` — "Müşteriler" heading, empty state
-- `/projects` — "Projeler" heading, empty state
-- `/invoices` — "Faturalar" heading, empty state
-- `/expenses` — "Giderler" heading, empty state
+---
 
-### 404 Page
-- Minimal "Sayfa bulunamadı" page
+## 1. AI Logo Oluşturma
 
-## Backend
-- Connect Supabase (Lovable Cloud) for auth only
-- No tables, no RLS policies yet
-- Email/password auth enabled
+**Nerede:** Ayarlar sayfasında (`/settings`) Marka kartı içinde, logo alanında "Logo yoksa AI ile oluştur" butonu.
 
-## File Structure
-- `src/pages/Login.tsx`, `Register.tsx`, `Dashboard.tsx`, `Clients.tsx`, `Projects.tsx`, `Invoices.tsx`, `Expenses.tsx`
-- `src/components/AppSidebar.tsx`, `src/components/AppLayout.tsx`, `src/components/ProtectedRoute.tsx`
-- Update `index.css` with grayscale design tokens and Inter font import
-- Update `App.tsx` with all routes
+**Akış:**
+1. Kullanıcı logosu yoksa "AI ile Logo Oluştur" butonu görünür
+2. Tıklayınca dialog açılır: marka adı, sektör, stil tercihi (minimalist, modern, cesur vb.) ve renk tercihi girilebilir
+3. "Oluştur" butonuna basılır → edge function çağrılır
+4. fal.ai'den 2-3 alternatif logo üretilir ve gösterilir
+5. Kullanıcı birini seçer → `profile-logos` bucket'ına yüklenir ve profilde kaydedilir
+
+**Teknik:**
+- **Yeni Edge Function:** `supabase/functions/generate-logo/index.ts`
+  - fal.ai flux/schnell veya benzeri model ile logo üretir
+  - Prompt'u marka adı + stil + sektörden otomatik oluşturur
+  - Base64 döner veya URL döner
+- **Settings.tsx'e eklenenler:**
+  - `LogoGeneratorDialog` bileşeni (dialog içinde form + sonuç galerisi)
+  - Logo yokken "AI ile Oluştur ✨" butonu
+
+---
+
+## 2. AI Fatura Şablonu Özelleştirme
+
+**Nerede:** Fatura detay sayfasında (`/invoice/:id`) veya yeni bir fatura şablon ayarları bölümünde.
+
+**Akış:**
+1. Kullanıcı fatura şablon tercihlerini ayarlar: renk şeması, layout stili, font tercihi
+2. fal.ai ile fatura arka planı veya dekoratif elementler üretilir
+3. Üretilen tasarım profilde kaydedilir ve tüm faturalara uygulanır
+
+**Teknik:**
+- **Yeni Edge Function:** `supabase/functions/generate-invoice-template/index.ts`
+  - Kullanıcının tercihlerine göre fatura dekoratif elementleri üretir
+- **DB Migration:** `profiles` tablosuna `invoice_template_config` (jsonb) kolonu eklenir — renk, stil, arka plan URL'si gibi tercihler saklanır
+- **InvoiceDetail.tsx güncellenir:** Kaydedilen şablon tercihleri fatura görünümüne uygulanır
+- **Yeni bileşen:** `InvoiceTemplateCustomizer` — şablon ayar dialog'u
+
+---
+
+## 3. Business Modeli İşareti
+
+- Her iki özelliğin butonlarına "Business ✨" badge'i eklenir
+- Şimdilik ücretsiz kullanılır, ileride ödeme entegrasyonu eklenebilir
+
+---
+
+## Dosya Değişiklikleri Özeti
+
+| Dosya | İşlem |
+|---|---|
+| `supabase/functions/generate-logo/index.ts` | Yeni — fal.ai logo üretim |
+| `supabase/functions/generate-invoice-template/index.ts` | Yeni — fal.ai fatura dekor üretim |
+| `src/pages/Settings.tsx` | Güncelle — AI logo butonu ve dialog |
+| `src/pages/InvoiceDetail.tsx` | Güncelle — şablon tercihleri uygula |
+| `src/components/LogoGeneratorDialog.tsx` | Yeni — logo üretim UI |
+| `src/components/InvoiceTemplateCustomizer.tsx` | Yeni — fatura şablon ayar UI |
+| DB migration | `profiles` tablosuna `invoice_template_config` jsonb kolonu |
+
