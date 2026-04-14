@@ -250,8 +250,7 @@ const Settings = () => {
                       AI ile Logo Oluştur
                       <span className="ml-2 text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium">Business ✨</span>
                     </Button>
-                  )}
-                  </div>
+                   )}
                   <input
                     ref={fileRef}
                     type="file"
