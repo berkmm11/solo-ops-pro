@@ -104,17 +104,28 @@ const Dashboard = () => {
     return () => { supabase.removeChannel(channel); };
   }, [user, queryClient]);
 
-  // ── Computed stats ──
-  const totalAlacak = useMemo(
-    () => invoices.filter((i) => i.status === "pending" || i.status === "overdue").reduce((s, i) => s + Number(i.amount), 0),
+  // ── Computed stats (currency-aware) ──
+  const totalAlacakTRY = useMemo(
+    () => invoices.filter((i) => i.status !== "paid" && ((i as any).currency || "TRY") === "TRY").reduce((s, i) => s + Number(i.amount), 0),
     [invoices]
   );
+
+  const pendingForeign = useMemo(() => {
+    const byCurrency: Record<string, number> = {};
+    invoices
+      .filter((i) => i.status !== "paid" && ((i as any).currency || "TRY") !== "TRY")
+      .forEach((i) => {
+        const c = (i as any).currency || "TRY";
+        byCurrency[c] = (byCurrency[c] || 0) + Number(i.amount);
+      });
+    return byCurrency;
+  }, [invoices]);
 
   const buAyKazanc = useMemo(() => {
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
     return invoices
-      .filter((i) => i.status === "paid" && i.issue_date >= monthStart)
+      .filter((i) => i.status === "paid" && i.issue_date >= monthStart && ((i as any).currency || "TRY") === "TRY")
       .reduce((s, i) => s + Number(i.amount), 0);
   }, [invoices]);
 
@@ -123,8 +134,8 @@ const Dashboard = () => {
     [projects]
   );
 
-  const toplamGelir = useMemo(
-    () => invoices.filter((i) => i.status === "paid").reduce((s, i) => s + Number(i.amount), 0),
+  const toplamGelirTRY = useMemo(
+    () => invoices.filter((i) => i.status === "paid" && ((i as any).currency || "TRY") === "TRY").reduce((s, i) => s + Number(i.amount), 0),
     [invoices]
   );
 
@@ -133,9 +144,9 @@ const Dashboard = () => {
     [expenses]
   );
 
-  const harcanabilir = Math.max(0, toplamGelir - toplamGider - sabitGiderler);
-  const kdv = toplamGelir * 0.2;
-  const stopaj = toplamGelir * 0.2;
+  const harcanabilir = Math.max(0, toplamGelirTRY - toplamGider - sabitGiderler);
+  const kdv = toplamGelirTRY * 0.2;
+  const stopaj = toplamGelirTRY * 0.2;
   const barTotal = Math.max(1, harcanabilir + kdv + stopaj + sabitGiderler);
 
   const segments = [
