@@ -13,22 +13,17 @@ import { format } from "date-fns";
 const fireConfetti = () => {
   const colors = ["#FFD700", "#FFA500", "#10B981", "#059669", "#3B82F6", "#6366F1"];
   const end = Date.now() + 3500;
-
   const frame = () => {
     if (Date.now() > end) return;
     confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0, y: 0.6 }, colors });
     confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1, y: 0.6 }, colors });
     requestAnimationFrame(frame);
   };
-
-  confetti({
-    particleCount: 100, spread: 100, origin: { y: 0.5 },
-    colors, startVelocity: 45, gravity: 0.8, scalar: 1.2,
-  });
+  confetti({ particleCount: 100, spread: 100, origin: { y: 0.5 }, colors, startVelocity: 45, gravity: 0.8, scalar: 1.2 });
   frame();
 };
 
-interface InvoiceData {
+interface PaymentInvoice {
   id: string;
   invoice_no: string;
   amount: number;
@@ -36,21 +31,16 @@ interface InvoiceData {
   due_date: string;
   status: string;
   description: string | null;
-  projects: { title: string } | null;
-  clients: { name: string } | null;
-}
-
-interface ProfileData {
-  full_name: string | null;
-  brand_name: string | null;
+  project_title: string | null;
+  client_name: string | null;
+  sender_name: string | null;
   iban: string | null;
   bank_name: string | null;
 }
 
 const PayInvoice = () => {
   const { id } = useParams<{ id: string }>();
-  const [invoice, setInvoice] = useState<InvoiceData | null>(null);
-  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [invoice, setInvoice] = useState<PaymentInvoice | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -59,43 +49,31 @@ const PayInvoice = () => {
 
   useEffect(() => {
     if (!id) return;
-    const fetchAll = async () => {
+    const fetchInvoice = async () => {
       setLoading(true);
-      const { data: inv, error: invErr } = await supabase
-        .from("invoices")
-        .select("id, invoice_no, amount, currency, due_date, status, description, user_id, projects(title), clients(name)")
-        .eq("id", id)
-        .maybeSingle();
+      const { data, error: rpcErr } = await supabase.rpc("get_invoice_for_payment", {
+        p_invoice_id: id,
+      });
 
-      if (invErr || !inv) {
+      if (rpcErr || !data) {
         setError("Fatura bulunamadı.");
         setLoading(false);
         return;
       }
 
-      const { data: prof } = await supabase
-        .from("profiles")
-        .select("full_name, brand_name, iban, bank_name")
-        .eq("user_id", inv.user_id)
-        .maybeSingle();
-
-      setInvoice(inv as any);
-      setProfile(prof);
+      setInvoice(data as unknown as PaymentInvoice);
       setLoading(false);
     };
-    fetchAll();
+    fetchInvoice();
   }, [id]);
 
   const isPaid = invoice?.status === "paid" || justPaid;
-  const currency = ((invoice as any)?.currency || "TRY") as Currency;
-  const senderName = profile?.brand_name || profile?.full_name || "—";
-  const clientName = (invoice as any)?.clients?.name || "—";
-  const projectTitle = (invoice as any)?.projects?.title || "—";
+  const currency = (invoice?.currency || "TRY") as Currency;
   const fmtDate = (d: string) => format(new Date(d), "dd.MM.yyyy");
 
   const copyIban = async () => {
-    if (!profile?.iban) return;
-    await navigator.clipboard.writeText(profile.iban.replace(/\s/g, ""));
+    if (!invoice?.iban) return;
+    await navigator.clipboard.writeText(invoice.iban.replace(/\s/g, ""));
     setCopied(true);
     toast.success("IBAN kopyalandı!");
     setTimeout(() => setCopied(false), 2000);
@@ -104,12 +82,10 @@ const PayInvoice = () => {
   const confirmPayment = useCallback(async () => {
     if (!invoice) return;
     setProcessing(true);
-
     try {
-      const { data, error: rpcErr } = await supabase.rpc("mark_invoice_paid", {
+      const { error: rpcErr } = await supabase.rpc("mark_invoice_paid", {
         p_invoice_id: invoice.id,
       });
-
       if (rpcErr) throw rpcErr;
 
       setJustPaid(true);
@@ -148,37 +124,29 @@ const PayInvoice = () => {
 
   return (
     <div className="min-h-screen bg-secondary flex flex-col">
-      {/* Header */}
       <header className="px-5 py-4">
         <span className="text-base font-bold tracking-tight text-foreground">
-          Solo<span className="text-muted-foreground">Ops</span>
+          solo<span className="text-muted-foreground">ops</span>
         </span>
       </header>
 
-      {/* Content */}
       <main className="flex-1 flex items-start justify-center px-4 pt-6 pb-10">
         <div className="w-full max-w-lg space-y-5">
           {/* Invoice Card */}
           <div className="bg-card rounded-2xl border border-border shadow-sm p-6 space-y-5">
-            {/* Status + Invoice No */}
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-muted-foreground">{invoice.invoice_no}</p>
-              <div className="transition-all duration-500">
-                {isPaid ? (
-                  <Badge className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 border-0 text-xs font-medium px-2.5 py-0.5">
-                    <Check className="mr-1 h-3 w-3" />
-                    Ödendi ✓
-                  </Badge>
-                ) : (
-                  <Badge className="bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/30 border-0 text-xs font-medium px-2.5 py-0.5">
-                    <Clock className="mr-1 h-3 w-3" />
-                    Ödeme Bekliyor
-                  </Badge>
-                )}
-              </div>
+              {isPaid ? (
+                <Badge className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 border-0 text-xs font-medium px-2.5 py-0.5">
+                  <Check className="mr-1 h-3 w-3" /> Ödendi ✓
+                </Badge>
+              ) : (
+                <Badge className="bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 border-0 text-xs font-medium px-2.5 py-0.5">
+                  <Clock className="mr-1 h-3 w-3" /> Ödeme Bekliyor
+                </Badge>
+              )}
             </div>
 
-            {/* Amount */}
             <div className="text-center py-3">
               <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Toplam Tutar</p>
               <p className="text-4xl font-bold text-foreground tracking-tight">
@@ -186,19 +154,18 @@ const PayInvoice = () => {
               </p>
             </div>
 
-            {/* Details */}
             <div className="space-y-3 text-sm">
               <div className="flex justify-between py-2 border-b border-border">
                 <span className="text-muted-foreground">Gönderen</span>
-                <span className="font-medium text-foreground">{senderName}</span>
+                <span className="font-medium text-foreground">{invoice.sender_name || "—"}</span>
               </div>
               <div className="flex justify-between py-2 border-b border-border">
                 <span className="text-muted-foreground">Alıcı</span>
-                <span className="font-medium text-foreground">{clientName}</span>
+                <span className="font-medium text-foreground">{invoice.client_name || "—"}</span>
               </div>
               <div className="flex justify-between py-2 border-b border-border">
                 <span className="text-muted-foreground">Proje</span>
-                <span className="font-medium text-foreground">{projectTitle}</span>
+                <span className="font-medium text-foreground">{invoice.project_title || "—"}</span>
               </div>
               <div className="flex justify-between py-2">
                 <span className="text-muted-foreground">Vade Tarihi</span>
@@ -208,29 +175,27 @@ const PayInvoice = () => {
           </div>
 
           {/* IBAN Card */}
-          {profile?.iban && (
+          {invoice.iban && (
             <div className="bg-card rounded-2xl border border-border shadow-sm p-5">
               <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3">Ödeme Bilgileri — IBAN</p>
               <button
                 onClick={copyIban}
                 className="w-full flex items-center justify-between bg-secondary border border-border rounded-xl px-4 py-3 text-left hover:border-muted-foreground/30 transition-colors group"
               >
-                <span className="font-mono text-sm text-foreground tracking-wide">
-                  {profile.iban}
-                </span>
+                <span className="font-mono text-sm text-foreground tracking-wide">{invoice.iban}</span>
                 {copied ? (
                   <Check className="h-4 w-4 text-emerald-500 shrink-0 ml-2" />
                 ) : (
                   <Copy className="h-4 w-4 text-muted-foreground group-hover:text-foreground shrink-0 ml-2" />
                 )}
               </button>
-              {profile.bank_name && (
-                <p className="text-xs text-muted-foreground mt-2">Banka: {profile.bank_name}</p>
+              {invoice.bank_name && (
+                <p className="text-xs text-muted-foreground mt-2">Banka: {invoice.bank_name}</p>
               )}
             </div>
           )}
 
-          {/* Confirm Button / Success State */}
+          {/* Confirm / Success */}
           {!isPaid ? (
             <Button
               onClick={confirmPayment}
@@ -239,10 +204,7 @@ const PayInvoice = () => {
               size="lg"
             >
               {processing ? (
-                <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  İşleniyor...
-                </>
+                <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> İşleniyor...</>
               ) : (
                 "Ödemeyi Onayla"
               )}
@@ -253,24 +215,17 @@ const PayInvoice = () => {
               className="w-full rounded-xl py-6 text-lg font-bold bg-emerald-600 text-white shadow-sm cursor-default"
               size="lg"
             >
-              <Check className="mr-2 h-5 w-5" />
-              Ödeme Başarılı!
+              <Check className="mr-2 h-5 w-5" /> Ödeme Başarılı!
             </Button>
           )}
 
-          {/* Thank you message */}
           {isPaid && (
             <div className="text-center py-4 animate-fadeIn">
-              <p className="text-sm font-medium text-foreground">
-                Ödemeniz başarıyla kaydedildi! 🎉
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Teşekkür ederiz, fatura durumu güncellendi.
-              </p>
+              <p className="text-sm font-medium text-foreground">Ödemeniz başarıyla kaydedildi! 🎉</p>
+              <p className="text-xs text-muted-foreground mt-1">Teşekkür ederiz, fatura durumu güncellendi.</p>
             </div>
           )}
 
-          {/* Footer */}
           <p className="text-center text-[10px] text-muted-foreground/60 pt-2">
             Bu sayfa soloops tarafından oluşturulmuştur.
           </p>
