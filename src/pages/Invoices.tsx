@@ -274,7 +274,7 @@ const Invoices = () => {
                       <TableCell className="font-medium text-sm">{inv.invoice_no}</TableCell>
                       <TableCell className="text-sm">{(inv as any).clients?.name || "—"}</TableCell>
                       <TableCell className="text-sm">{(inv as any).projects?.title || "—"}</TableCell>
-                      <TableCell className="text-sm text-right font-semibold">{fmtAmount(inv.amount)}</TableCell>
+                      <TableCell className="text-sm text-right font-semibold">{fmtAmount(inv.amount, ((inv as any).currency || "TRY") as Currency)}</TableCell>
                       <TableCell className="text-sm">{fmtDate(inv.due_date)}</TableCell>
                       <TableCell>
                         <Badge variant="secondary" className={cn("text-xs font-medium", sc.bg, sc.text, `hover:${sc.bg}`)}>
