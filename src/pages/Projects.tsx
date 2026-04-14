@@ -6,6 +6,7 @@ import { tr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Tables, TablesInsert } from "@/integrations/supabase/types";
+import { Currency, currencies, currencyConfig, fmtMoney } from "@/lib/currency";
 import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,9 +45,9 @@ const filters: { value: string; label: string }[] = [
   { value: "ödendi", label: "Ödendi" },
 ];
 
-const formatPrice = (n: number | null) => {
+const formatPrice = (n: number | null, currency: Currency = "TRY") => {
   if (n == null) return "—";
-  return n.toLocaleString("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + " ₺";
+  return fmtMoney(n, currency);
 };
 
 const formatDate = (d: string | null) => {
@@ -54,7 +55,7 @@ const formatDate = (d: string | null) => {
   return format(new Date(d), "dd.MM.yyyy");
 };
 
-const emptyForm = { title: "", client_id: "", price: "", deadline: undefined as Date | undefined, status: "taslak" as ProjectStatus };
+const emptyForm = { title: "", client_id: "", price: "", deadline: undefined as Date | undefined, status: "taslak" as ProjectStatus, currency: "TRY" as Currency };
 
 const Projects = () => {
   const { user } = useAuth();
@@ -95,6 +96,7 @@ const Projects = () => {
         price: values.price ? parseFloat(values.price) : null,
         deadline: values.deadline ? format(values.deadline, "yyyy-MM-dd") : null,
         status: values.status,
+        currency: values.currency,
       };
       if (editing) {
         const { error } = await supabase.from("projects").update(payload).eq("id", editing.id);
@@ -127,6 +129,7 @@ const Projects = () => {
       price: p.price != null ? String(p.price) : "",
       deadline: p.deadline ? new Date(p.deadline) : undefined,
       status: p.status as ProjectStatus,
+      currency: ((p as any).currency || "TRY") as Currency,
     });
     setOpen(true);
   };
@@ -207,10 +210,10 @@ const Projects = () => {
                     </Badge>
                   </div>
                   <h3 className="text-lg font-semibold text-foreground mt-2">{p.title}</h3>
-                  <div className="flex items-center justify-between mt-3 text-sm text-muted-foreground">
-                    <span className="font-medium text-foreground">{formatPrice(p.price)}</span>
-                    <span>{formatDate(p.deadline)}</span>
-                  </div>
+                    <div className="flex items-center justify-between mt-3 text-sm text-muted-foreground">
+                      <span className="font-medium text-foreground">{formatPrice(p.price, ((p as any).currency || "TRY") as Currency)}</span>
+                      <span>{formatDate(p.deadline)}</span>
+                    </div>
                 </div>
               );
             })}
@@ -249,16 +252,29 @@ const Projects = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="price">Fiyat (₺)</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={form.price}
-                  onChange={(e) => setForm({ ...form, price: e.target.value })}
-                  placeholder="0"
-                />
+                <Label htmlFor="price">Fiyat</Label>
+                <div className="flex gap-2">
+                  <Select value={form.currency} onValueChange={(v) => setForm({ ...form, currency: v as Currency })}>
+                    <SelectTrigger className="w-24">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {currencies.map((c) => (
+                        <SelectItem key={c} value={c}>{currencyConfig[c].label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    id="price"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.price}
+                    onChange={(e) => setForm({ ...form, price: e.target.value })}
+                    placeholder="0"
+                    className="flex-1"
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">

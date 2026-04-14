@@ -12,6 +12,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { Currency, fmtMoney } from "@/lib/currency";
 
 const fmt = (n: number) =>
   n.toLocaleString("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
@@ -103,17 +104,28 @@ const Dashboard = () => {
     return () => { supabase.removeChannel(channel); };
   }, [user, queryClient]);
 
-  // ── Computed stats ──
-  const totalAlacak = useMemo(
-    () => invoices.filter((i) => i.status === "pending" || i.status === "overdue").reduce((s, i) => s + Number(i.amount), 0),
+  // ── Computed stats (currency-aware) ──
+  const totalAlacakTRY = useMemo(
+    () => invoices.filter((i) => i.status !== "paid" && ((i as any).currency || "TRY") === "TRY").reduce((s, i) => s + Number(i.amount), 0),
     [invoices]
   );
+
+  const pendingForeign = useMemo(() => {
+    const byCurrency: Record<string, number> = {};
+    invoices
+      .filter((i) => i.status !== "paid" && ((i as any).currency || "TRY") !== "TRY")
+      .forEach((i) => {
+        const c = (i as any).currency || "TRY";
+        byCurrency[c] = (byCurrency[c] || 0) + Number(i.amount);
+      });
+    return byCurrency;
+  }, [invoices]);
 
   const buAyKazanc = useMemo(() => {
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
     return invoices
-      .filter((i) => i.status === "paid" && i.issue_date >= monthStart)
+      .filter((i) => i.status === "paid" && i.issue_date >= monthStart && ((i as any).currency || "TRY") === "TRY")
       .reduce((s, i) => s + Number(i.amount), 0);
   }, [invoices]);
 
@@ -122,8 +134,8 @@ const Dashboard = () => {
     [projects]
   );
 
-  const toplamGelir = useMemo(
-    () => invoices.filter((i) => i.status === "paid").reduce((s, i) => s + Number(i.amount), 0),
+  const toplamGelirTRY = useMemo(
+    () => invoices.filter((i) => i.status === "paid" && ((i as any).currency || "TRY") === "TRY").reduce((s, i) => s + Number(i.amount), 0),
     [invoices]
   );
 
@@ -132,9 +144,9 @@ const Dashboard = () => {
     [expenses]
   );
 
-  const harcanabilir = Math.max(0, toplamGelir - toplamGider - sabitGiderler);
-  const kdv = toplamGelir * 0.2;
-  const stopaj = toplamGelir * 0.2;
+  const harcanabilir = Math.max(0, toplamGelirTRY - toplamGider - sabitGiderler);
+  const kdv = toplamGelirTRY * 0.2;
+  const stopaj = toplamGelirTRY * 0.2;
   const barTotal = Math.max(1, harcanabilir + kdv + stopaj + sabitGiderler);
 
   const segments = [
@@ -174,8 +186,13 @@ const Dashboard = () => {
     toast.success("Veriler güncelleniyor...");
   };
 
+  const foreignSubtitle = useMemo(() => {
+    const parts = Object.entries(pendingForeign).map(([c, amt]) => fmtMoney(amt, c as Currency));
+    return parts.length > 0 ? `(${parts.join(" + ")} ayrıca bekliyor)` : null;
+  }, [pendingForeign]);
+
   const statCards = [
-    { title: "Toplam Alacak", icon: HandCoins, value: `₺${fmt(totalAlacak)}` },
+    { title: "Toplam Alacak (₺)", icon: HandCoins, value: `₺${fmt(totalAlacakTRY)}` },
     { title: "Bu Ay Kazanç", icon: TrendingUp, value: `₺${fmt(buAyKazanc)}` },
     { title: "Aktif Projeler", icon: FolderKanban, value: String(aktifProjeSayisi) },
   ];
@@ -203,6 +220,9 @@ const Dashboard = () => {
               <p className="text-5xl md:text-6xl font-bold mt-3 tracking-tight">
                 ₺{fmt(harcanabilir)}
               </p>
+              {foreignSubtitle && (
+                <p className="text-sm opacity-75 mt-2">{foreignSubtitle}</p>
+              )}
               <p className="text-sm opacity-75 mt-3">
                 Gönül rahatlığıyla harcayabileceğin tutar
               </p>
@@ -356,7 +376,7 @@ const Dashboard = () => {
                       {filteredProjects.map((p) => {
                         const sc = projectStatusConfig[p.status] || { label: p.status, color: "#9CA3AF", dotClass: "bg-gray-400" };
                         const clientName = (p as any).clients?.name || "—";
-                        const price = p.price != null ? `₺${fmt(p.price)}` : "—";
+                        const price = p.price != null ? fmtMoney(p.price, ((p as any).currency || "TRY") as Currency) : "—";
                         return (
                           <div
                             key={p.id}

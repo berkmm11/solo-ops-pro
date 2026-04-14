@@ -7,6 +7,7 @@ import { tr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Tables, TablesInsert } from "@/integrations/supabase/types";
+import { Currency, currencies, currencyConfig, fmtMoneyFull } from "@/lib/currency";
 import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,8 +50,7 @@ const filters = [
   { value: "overdue", label: "Gecikmiş" },
 ];
 
-const fmtAmount = (n: number) =>
-  n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " ₺";
+const fmtAmount = (n: number, currency: Currency = "TRY") => fmtMoneyFull(n, currency);
 
 const fmtDate = (d: string | null) => {
   if (!d) return "—";
@@ -66,6 +66,7 @@ const generateInvoiceNo = (existingCount: number) => {
 const emptyForm = {
   project_id: "",
   amount: "",
+  currency: "TRY" as Currency,
   issue_date: new Date(),
   due_date: addDays(new Date(), 14),
   description: "",
@@ -144,6 +145,7 @@ const Invoices = () => {
         due_date: format(values.due_date, "yyyy-MM-dd"),
         description: values.description || null,
         status: "pending",
+        currency: values.currency,
       };
       const { error } = await supabase.from("invoices").insert(insert);
       if (error) throw error;
@@ -194,6 +196,7 @@ const Invoices = () => {
       ...form,
       project_id: projectId,
       amount: project?.price != null ? String(project.price) : form.amount,
+      currency: ((project as any)?.currency || "TRY") as Currency,
     });
   };
 
@@ -271,7 +274,7 @@ const Invoices = () => {
                       <TableCell className="font-medium text-sm">{inv.invoice_no}</TableCell>
                       <TableCell className="text-sm">{(inv as any).clients?.name || "—"}</TableCell>
                       <TableCell className="text-sm">{(inv as any).projects?.title || "—"}</TableCell>
-                      <TableCell className="text-sm text-right font-semibold">{fmtAmount(inv.amount)}</TableCell>
+                      <TableCell className="text-sm text-right font-semibold">{fmtAmount(inv.amount, ((inv as any).currency || "TRY") as Currency)}</TableCell>
                       <TableCell className="text-sm">{fmtDate(inv.due_date)}</TableCell>
                       <TableCell>
                         <Badge variant="secondary" className={cn("text-xs font-medium", sc.bg, sc.text, `hover:${sc.bg}`)}>
@@ -364,28 +367,41 @@ const Invoices = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="amount">Brüt Tutar (₺)</Label>
-                <Input
-                  id="amount"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={form.amount}
-                  onChange={(e) => setForm({ ...form, amount: e.target.value })}
-                  placeholder="0,00"
-                />
-                {form.amount && parseFloat(form.amount) > 0 && (() => {
+                <Label htmlFor="amount">Brüt Tutar</Label>
+                <div className="flex gap-2">
+                  <Select value={form.currency} onValueChange={(v) => setForm({ ...form, currency: v as Currency })}>
+                    <SelectTrigger className="w-24">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {currencies.map((c) => (
+                        <SelectItem key={c} value={c}>{currencyConfig[c].label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    id="amount"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.amount}
+                    onChange={(e) => setForm({ ...form, amount: e.target.value })}
+                    placeholder="0,00"
+                    className="flex-1"
+                  />
+                </div>
+                {form.amount && parseFloat(form.amount) > 0 && form.currency === "TRY" && (() => {
                   const brut = parseFloat(form.amount);
-                  const kdv = brut * 0.2;
-                  const stopaj = brut * 0.2;
-                  const net = brut + kdv - stopaj;
-                  const fmt = (n: number) => n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " ₺";
+                  const kdvVal = brut * 0.2;
+                  const stopajVal = brut * 0.2;
+                  const net = brut + kdvVal - stopajVal;
+                  const fmt2 = (n: number) => fmtMoneyFull(n, "TRY");
                   return (
                     <div className="rounded-md border border-border bg-muted/50 p-3 space-y-1 text-sm">
-                      <div className="flex justify-between"><span className="text-muted-foreground">Brüt Tutar:</span><span className="font-medium">{fmt(brut)}</span></div>
-                      <div className="flex justify-between"><span className="text-muted-foreground">KDV (%20):</span><span className="font-medium text-[#065F46]">+{fmt(kdv)}</span></div>
-                      <div className="flex justify-between"><span className="text-muted-foreground">Stopaj (%20):</span><span className="font-medium text-[#991B1B]">-{fmt(stopaj)}</span></div>
-                      <div className="flex justify-between border-t border-border pt-1"><span className="font-bold">Net Tutar:</span><span className="font-bold">{fmt(net)}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Brüt Tutar:</span><span className="font-medium">{fmt2(brut)}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">KDV (%20):</span><span className="font-medium text-[#065F46]">+{fmt2(kdvVal)}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Stopaj (%20):</span><span className="font-medium text-[#991B1B]">-{fmt2(stopajVal)}</span></div>
+                      <div className="flex justify-between border-t border-border pt-1"><span className="font-bold">Net Tutar:</span><span className="font-bold">{fmt2(net)}</span></div>
                     </div>
                   );
                 })()}
