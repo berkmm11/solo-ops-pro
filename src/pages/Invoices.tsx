@@ -145,6 +145,7 @@ const Invoices = () => {
         due_date: format(values.due_date, "yyyy-MM-dd"),
         description: values.description || null,
         status: "pending",
+        currency: values.currency,
       };
       const { error } = await supabase.from("invoices").insert(insert);
       if (error) throw error;
@@ -195,6 +196,7 @@ const Invoices = () => {
       ...form,
       project_id: projectId,
       amount: project?.price != null ? String(project.price) : form.amount,
+      currency: ((project as any)?.currency || "TRY") as Currency,
     });
   };
 
