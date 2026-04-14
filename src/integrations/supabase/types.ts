@@ -259,6 +259,7 @@ export type Database = {
           total_invoices: number
         }[]
       }
+      get_invoice_for_payment: { Args: { p_invoice_id: string }; Returns: Json }
       mark_invoice_paid: { Args: { p_invoice_id: string }; Returns: boolean }
     }
     Enums: {
