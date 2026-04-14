@@ -9,13 +9,13 @@ import {
   ChevronDown, ChevronUp, Wallet, HandCoins, TrendingUp,
   FolderKanban, RefreshCw, LayoutDashboard,
 } from "lucide-react";
-import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Currency, fmtMoney } from "@/lib/currency";
 import { useExchangeRates } from "@/hooks/useExchangeRates";
 import ExchangeRateBar from "@/components/ExchangeRateBar";
+import ProjectStatusDonut from "@/components/dashboard/ProjectStatusDonut";
 
 const fmt = (n: number) =>
   n.toLocaleString("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
@@ -424,34 +424,11 @@ const Dashboard = () => {
                     {/* Donut Chart */}
                     <div className="flex flex-col items-center">
                       <div className="relative w-48 h-48">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie
-                              data={donutData}
-                              cx="50%" cy="50%"
-                              innerRadius={55} outerRadius={80}
-                              dataKey="value"
-                              startAngle={90} endAngle={-270}
-                              isAnimationActive={false}
-                              cursor="pointer"
-                              onClick={(_: any, index: number) => toggleFilter(donutData[index].status)}
-                            >
-                              {donutData.map((entry, i) => (
-                                <Cell
-                                  key={i}
-                                  fill={entry.color}
-                                  stroke="none"
-                                  opacity={statusFilter && statusFilter !== entry.status ? 0.25 : 1}
-                                  style={{
-                                    transform: statusFilter === entry.status ? "scale(1.08)" : "scale(1)",
-                                    transformOrigin: "center",
-                                    transition: "opacity 0.3s, transform 0.3s",
-                                  }}
-                                />
-                              ))}
-                            </Pie>
-                          </PieChart>
-                        </ResponsiveContainer>
+                        <ProjectStatusDonut
+                          data={donutData}
+                          activeStatus={statusFilter}
+                          onSelect={toggleFilter}
+                        />
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                           <span className="text-3xl font-bold text-foreground">{filteredProjects.length}</span>
                           <span className="text-xs text-muted-foreground">Proje</span>
