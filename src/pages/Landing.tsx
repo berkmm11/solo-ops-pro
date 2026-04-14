@@ -312,6 +312,160 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* ── FİYATLANDIRMA ── */}
+      <section className="relative z-30 py-24 md:py-32 px-6">
+        <div className="mx-auto max-w-7xl">
+          <FadeIn>
+            <p className="text-sm font-medium bg-gradient-to-r from-[#FA93FA] to-[#983AD6] bg-clip-text text-transparent text-center mb-4">
+              FİYATLANDIRMA
+            </p>
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-foreground">
+              Net fiyat, gizli maliyet yok
+            </h2>
+            <p className="text-center text-muted-foreground mb-16 max-w-lg mx-auto">
+              İhtiyacına göre seç. İstediğin zaman yükselt veya iptal et.
+            </p>
+          </FadeIn>
+
+          <div className="grid md:grid-cols-3 gap-6 items-start">
+            {/* FREE */}
+            <FadeIn delay={0}>
+              <div className="rounded-2xl border border-border bg-card p-8 h-full flex flex-col">
+                <h3 className="text-xl font-bold text-foreground">Free</h3>
+                <div className="mt-4 flex items-baseline gap-1">
+                  <span className="text-4xl font-bold text-foreground">0 ₺</span>
+                  <span className="text-sm text-muted-foreground">/ay</span>
+                </div>
+                <p className="text-sm text-muted-foreground mt-2">Tanış, dene, kullan</p>
+                <ul className="mt-6 space-y-3 flex-1">
+                  {[
+                    "3 müşteriye kadar",
+                    "5 faturaya kadar",
+                    "Temel gelir/gider takibi",
+                    "PDF fatura indirme",
+                    "Harcanabilir bakiye hesabı",
+                    "Türkçe arayüz",
+                  ].map((f) => (
+                    <li key={f} className="flex items-start gap-2 text-sm text-muted-foreground">
+                      <Check className="w-4 h-4 mt-0.5 shrink-0 text-muted-foreground/50" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  to="/register"
+                  className="mt-8 inline-flex items-center justify-center w-full border-2 border-foreground text-foreground font-semibold text-sm px-6 py-3 rounded-full hover:bg-foreground hover:text-background transition-colors"
+                >
+                  Ücretsiz Başla
+                </Link>
+              </div>
+            </FadeIn>
+
+            {/* PRO — HIGHLIGHTED */}
+            <FadeIn delay={0.1}>
+              <div className="relative rounded-2xl border-2 border-[#2dd4bf] bg-card p-8 h-full flex flex-col shadow-lg shadow-[#2dd4bf]/10">
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
+                  <span className="inline-flex items-center gap-1 bg-[#2dd4bf] text-[#042f2e] text-xs font-bold px-4 py-1 rounded-full">
+                    🔥 EN POPÜLER
+                  </span>
+                </div>
+                <h3 className="text-xl font-bold text-foreground mt-2">Pro</h3>
+                <div className="mt-4 flex items-baseline gap-1">
+                  <span className="text-4xl font-bold text-foreground">39 ₺</span>
+                  <span className="text-sm text-muted-foreground">/ay</span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Yıllık ödemede 29 ₺/ay</p>
+                <p className="text-sm text-muted-foreground mt-2">Gerçek freelancer'ın planı</p>
+                <ul className="mt-6 space-y-3 flex-1">
+                  {[
+                    "Sınırsız müşteri",
+                    "Sınırsız fatura",
+                    "AI ödeme hatırlatmaları",
+                    "Güven skoru (A/B/C)",
+                    "Çoklu döviz desteği (₺/$/€)",
+                    "Canlı döviz kuru",
+                    "Ödeme linki oluşturma",
+                    "Öncelikli destek",
+                  ].map((f) => (
+                    <li key={f} className="flex items-start gap-2 text-sm text-foreground">
+                      <Check className="w-4 h-4 mt-0.5 shrink-0 text-emerald-500" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  to="/register"
+                  className="mt-8 inline-flex items-center justify-center w-full bg-[#2dd4bf] text-[#042f2e] font-semibold text-sm px-6 py-3 rounded-full hover:bg-[#14b8a6] transition-colors"
+                >
+                  Pro'yu Dene
+                </Link>
+                <p className="text-xs text-muted-foreground text-center mt-3">30 gün para iade garantisi</p>
+              </div>
+            </FadeIn>
+
+            {/* BUSINESS */}
+            <FadeIn delay={0.2}>
+              <div className="rounded-2xl border border-border bg-card p-8 h-full flex flex-col">
+                <h3 className="text-xl font-bold text-foreground">Business</h3>
+                <div className="mt-4 flex items-baseline gap-1">
+                  <span className="text-4xl font-bold text-foreground">69 ₺</span>
+                  <span className="text-sm text-muted-foreground">/ay</span>
+                </div>
+                <p className="text-sm text-muted-foreground mt-2">Tam kadro freelancer işletmesi</p>
+                <ul className="mt-6 space-y-3 flex-1">
+                  {[
+                    "Pro'daki her şey",
+                    "AI logo oluşturma",
+                    "AI fatura şablonu özelleştirme",
+                    "Gelişmiş raporlama",
+                    "Takım üyesi ekleme",
+                    "Marka özelleştirme",
+                    "API erişimi",
+                    "Özel destek hattı",
+                  ].map((f) => (
+                    <li key={f} className="flex items-start gap-2 text-sm text-muted-foreground">
+                      <Check className="w-4 h-4 mt-0.5 shrink-0 text-muted-foreground/50" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  to="/register"
+                  className="mt-8 inline-flex items-center justify-center w-full border-2 border-foreground text-foreground font-semibold text-sm px-6 py-3 rounded-full hover:bg-foreground hover:text-background transition-colors"
+                >
+                  Business'a Geç
+                </Link>
+              </div>
+            </FadeIn>
+          </div>
+
+          {/* Comparison note */}
+          <FadeIn delay={0.3}>
+            <div className="mt-12 text-center">
+              <p className="text-sm text-muted-foreground">
+                <span className="line-through opacity-60">FreshBooks 760 ₺/ay</span>
+                {" · "}
+                <span className="line-through opacity-60">Paraşüt 499 ₺/ay</span>
+                {" · "}
+                <span className="font-semibold text-foreground">soloops 39 ₺/ay</span>
+              </p>
+            </div>
+          </FadeIn>
+
+          {/* Launch banner */}
+          <FadeIn delay={0.4}>
+            <div className="mt-8 mx-auto max-w-xl">
+              <div className="flex items-center justify-center gap-3 rounded-full border border-[#2dd4bf]/30 bg-[#2dd4bf]/5 px-6 py-3">
+                <Gift className="w-5 h-5 text-[#2dd4bf] shrink-0" />
+                <p className="text-sm text-foreground">
+                  <span className="font-semibold">İlk 1.000 kullanıcıya</span> ömür boyu %30 indirim — erken kaydol
+                </p>
+              </div>
+            </div>
+          </FadeIn>
+        </div>
+      </section>
+
       {/* ── CTA BAND ── */}
       <section className="relative z-30 py-20 px-6">
         <FadeIn>
