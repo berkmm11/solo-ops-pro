@@ -32,14 +32,16 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
 
-    // Get current user
-    const { data: { user }, error: userErr } = await supabase.auth.getUser();
-    if (userErr || !user) {
+    // Validate user via JWT claims (faster, no server round-trip)
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsErr } = await supabase.auth.getClaims(token);
+    if (claimsErr || !claimsData?.claims?.sub) {
       return new Response(
         JSON.stringify({ error: "Kullanıcı doğrulanamadı." }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+    const userId = claimsData.claims.sub as string;
 
     const { messages } = await req.json();
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
