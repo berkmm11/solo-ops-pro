@@ -20,13 +20,12 @@ const ACTIVE_STROKE = 28;
 const RADIUS = CENTER - ACTIVE_STROKE / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
-const ProjectStatusDonut = React.forwardRef<SVGSVGElement, ProjectStatusDonutProps>(
-  ({ activeStatus, data, onSelect }, ref) => {
+const ProjectStatusDonut = ({ activeStatus, data, onSelect }: ProjectStatusDonutProps) => {
     const total = data.reduce((sum, item) => sum + item.value, 0);
 
     if (total === 0) {
       return (
-        <svg ref={ref} viewBox={`0 0 ${SIZE} ${SIZE}`} className="h-48 w-48" aria-hidden="true">
+      <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="h-48 w-48" aria-hidden="true">
           <circle
             cx={CENTER}
             cy={CENTER}
