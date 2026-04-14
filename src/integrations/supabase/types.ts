@@ -88,6 +88,7 @@ export type Database = {
           amount: number
           client_id: string | null
           created_at: string
+          currency: string
           description: string | null
           due_date: string
           id: string
@@ -102,6 +103,7 @@ export type Database = {
           amount?: number
           client_id?: string | null
           created_at?: string
+          currency?: string
           description?: string | null
           due_date?: string
           id?: string
@@ -116,6 +118,7 @@ export type Database = {
           amount?: number
           client_id?: string | null
           created_at?: string
+          currency?: string
           description?: string | null
           due_date?: string
           id?: string
@@ -198,6 +201,7 @@ export type Database = {
         Row: {
           client_id: string | null
           created_at: string
+          currency: string
           deadline: string | null
           id: string
           price: number | null
@@ -209,6 +213,7 @@ export type Database = {
         Insert: {
           client_id?: string | null
           created_at?: string
+          currency?: string
           deadline?: string | null
           id?: string
           price?: number | null
@@ -220,6 +225,7 @@ export type Database = {
         Update: {
           client_id?: string | null
           created_at?: string
+          currency?: string
           deadline?: string | null
           id?: string
           price?: number | null

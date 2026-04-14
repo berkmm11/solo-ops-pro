@@ -1,0 +1,2 @@
+ALTER TABLE public.projects ADD COLUMN currency TEXT NOT NULL DEFAULT 'TRY' CHECK (currency IN ('TRY', 'USD', 'EUR'));
+ALTER TABLE public.invoices ADD COLUMN currency TEXT NOT NULL DEFAULT 'TRY' CHECK (currency IN ('TRY', 'USD', 'EUR'));
