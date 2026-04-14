@@ -41,7 +41,7 @@ const ProjectStatusDonut = ({ activeStatus, data, onSelect }: ProjectStatusDonut
     let offset = 0;
 
     return (
-      <svg ref={ref} viewBox={`0 0 ${SIZE} ${SIZE}`} className="h-48 w-48" aria-label="Proje durum dağılımı" role="img">
+      <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="h-48 w-48" aria-label="Proje durum dağılımı" role="img">
         <circle
           cx={CENTER}
           cy={CENTER}
