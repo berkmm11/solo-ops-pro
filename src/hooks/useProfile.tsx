@@ -15,6 +15,7 @@ export interface Profile {
   brand_name: string | null;
   logo_url: string | null;
   onboarding_completed: boolean;
+  invoice_template_config: any | null;
 }
 
 export const useProfile = () => {
