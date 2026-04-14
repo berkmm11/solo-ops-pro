@@ -13,6 +13,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Currency, fmtMoney } from "@/lib/currency";
+import { useExchangeRates } from "@/hooks/useExchangeRates";
+import ExchangeRateBar from "@/components/ExchangeRateBar";
 
 const fmt = (n: number) =>
   n.toLocaleString("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
