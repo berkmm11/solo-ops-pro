@@ -21,20 +21,20 @@ const EmptyState = ({
   actionDisabled,
 }: EmptyStateProps) => {
   return (
-    <div className="flex flex-col items-center justify-center py-24 text-center animate-fade-in">
-      <div className="h-16 w-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-5">
+    <div className="flex flex-col items-center justify-center py-32 text-center animate-fade-in min-h-[50vh]">
+      <div className="mb-6">
         {emoji ? (
-          <span className="text-3xl">{emoji}</span>
+          <span className="text-5xl">{emoji}</span>
         ) : (
-          <Icon className="h-8 w-8 text-muted-foreground/50" />
+          <Icon className="h-12 w-12 text-muted-foreground/40" />
         )}
       </div>
-      <h2 className="text-lg font-semibold text-foreground">{title}</h2>
-      <p className="text-sm text-muted-foreground mt-1.5 max-w-sm leading-relaxed">
+      <h2 className="text-xl font-semibold text-foreground">{title}</h2>
+      <p className="text-sm text-muted-foreground mt-2 max-w-sm mx-auto leading-relaxed">
         {description}
       </p>
       {actionLabel && onAction && (
-        <Button className="mt-6" onClick={onAction} disabled={actionDisabled}>
+        <Button className="mt-7 rounded-lg px-6 py-2" onClick={onAction} disabled={actionDisabled}>
           {actionLabel}
         </Button>
       )}
