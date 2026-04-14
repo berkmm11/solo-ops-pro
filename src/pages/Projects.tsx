@@ -17,12 +17,16 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
   Popover, PopoverContent, PopoverTrigger,
 } from "@/components/ui/popover";
-import { FolderKanban, Plus, CalendarIcon } from "lucide-react";
+import { FolderKanban, Plus, CalendarIcon, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -64,6 +68,7 @@ const Projects = () => {
   const [editing, setEditing] = useState<Project | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [filter, setFilter] = useState("all");
+  const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
 
   const { data: projects = [], isLoading } = useQuery({
     queryKey: ["projects"],
@@ -113,6 +118,23 @@ const Projects = () => {
       closeModal();
     },
     onError: () => toast.error("Bir hata oluştu"),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (projectId: string) => {
+      // Delete linked invoices first
+      await supabase.from("invoices").delete().eq("project_id", projectId);
+      const { error } = await supabase.from("projects").delete().eq("id", projectId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-projects"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-invoices"] });
+      toast.success("Proje silindi");
+      setDeleteTarget(null);
+    },
+    onError: () => toast.error("Silme sırasında hata oluştu"),
   });
 
   const openNew = () => {
@@ -201,9 +223,17 @@ const Projects = () => {
                 <div
                   key={p.id}
                   onClick={() => openEdit(p)}
-                  className="border border-border rounded-xl p-5 bg-background cursor-pointer transition-shadow hover:shadow-md"
+                  className="relative border border-border rounded-xl p-5 bg-background cursor-pointer transition-shadow hover:shadow-md"
                 >
-                  <div className="flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setDeleteTarget(p); }}
+                    className="absolute top-3 right-3 p-1.5 rounded-md text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                    title="Projeyi sil"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                  <div className="flex items-center justify-between pr-8">
                     <span className="text-sm text-muted-foreground">{clientName || "—"}</span>
                     <Badge variant="secondary" className={cn("text-xs font-medium", sc.bg, sc.text, "hover:" + sc.bg)}>
                       {sc.label}
@@ -323,6 +353,27 @@ const Projects = () => {
             </form>
           </DialogContent>
         </Dialog>
+
+        {/* Delete Confirmation */}
+        <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Bu projeyi silmek istediğinize emin misiniz?</AlertDialogTitle>
+              <AlertDialogDescription>
+                "{deleteTarget?.title}" projesi ve bağlı faturaları kalıcı olarak silinecek. Bu işlem geri alınamaz.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Vazgeç</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                Sil
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AppLayout>
   );
