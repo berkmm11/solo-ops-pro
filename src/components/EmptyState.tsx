@@ -2,7 +2,7 @@ import { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface EmptyStateProps {
-  icon: LucideIcon;
+  icon?: LucideIcon;
   emoji?: string;
   title: string;
   description: string;
