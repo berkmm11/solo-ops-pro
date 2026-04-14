@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FileDown, Pencil, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import AiReminderSection from "@/components/AiReminderSection";
 
 type InvoiceStatus = "pending" | "paid" | "overdue";
 
