@@ -40,6 +40,7 @@ const Dashboard = () => {
   const queryClient = useQueryClient();
   const [giderOpen, setGiderOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const { data: rates, isLoading: ratesLoading } = useExchangeRates();
 
   // ── Fetch real data ──
   const { data: projects = [], isLoading: projLoading } = useQuery({
