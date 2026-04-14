@@ -1,9 +1,13 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import AppLayout from "@/components/AppLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
 import { Receipt, Landmark, Building2, Wifi, Monitor, Calculator, ChevronDown, ChevronUp, Wallet, HandCoins, TrendingUp, FolderKanban, FileText } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import { toast } from "sonner";
 
 const fmt = (n: number) =>
   n.toLocaleString("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
@@ -40,7 +44,7 @@ const stats = [
 ];
 
 // Project status mock data
-const mockProjects = [
+const initialProjects = [
   { id: 1, name: "Acme Corp Web Sitesi", client: "Acme Corp", budget: 45000, currency: "TRY", status: "in_progress", dueDate: "2026-05-01" },
   { id: 2, name: "Beta Logo Tasarım", client: "Beta Ltd", budget: 12000, currency: "TRY", status: "completed", dueDate: "2026-04-10" },
   { id: 3, name: "Gamma App UI/UX", client: "Gamma Inc", budget: 2500, currency: "USD", status: "invoiced", dueDate: "2026-03-28" },
@@ -57,30 +61,44 @@ const projectStatusConfig: Record<string, { label: string; color: string; dotCla
   overdue:     { label: "Gecikmiş",     color: "#EF4444", dotClass: "bg-red-500" },
 };
 
-const donutData = Object.entries(
-  mockProjects.reduce<Record<string, number>>((acc, p) => {
-    acc[p.status] = (acc[p.status] || 0) + 1;
-    return acc;
-  }, {})
-).map(([status, count]) => ({
-  status,
-  name: projectStatusConfig[status].label,
-  value: count,
-  color: projectStatusConfig[status].color,
-}));
+type MockProject = typeof initialProjects[number];
 
 const Dashboard = () => {
   const [giderOpen, setGiderOpen] = useState(false);
   const [activeCurrency, setActiveCurrency] = useState(0);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [projects, setProjects] = useState(initialProjects);
+  const [invoiceModal, setInvoiceModal] = useState<MockProject | null>(null);
   const active = currencies[activeCurrency];
+
+  const donutData = useMemo(() => {
+    const counts: Record<string, number> = {};
+    projects.forEach((p) => { counts[p.status] = (counts[p.status] || 0) + 1; });
+    return Object.entries(counts).map(([status, count]) => ({
+      status,
+      name: projectStatusConfig[status].label,
+      value: count,
+      color: projectStatusConfig[status].color,
+    }));
+  }, [projects]);
 
   const toggleFilter = (status: string) =>
     setStatusFilter((prev) => (prev === status ? null : status));
 
   const filteredProjects = statusFilter
-    ? mockProjects.filter((p) => p.status === statusFilter)
-    : mockProjects;
+    ? projects.filter((p) => p.status === statusFilter)
+    : projects;
+
+  const handleInvoice = (project: MockProject) => {
+    setProjects((prev) =>
+      prev.map((p) => (p.id === project.id ? { ...p, status: "invoiced" } : p))
+    );
+    setInvoiceModal(null);
+    toast.success("Fatura oluşturuldu!");
+  };
+
+  const invoiceCount = projects.filter((p) => p.status === "invoiced" || p.status === "paid").length;
+  const generateInvoiceNo = () => `SOP-${new Date().getFullYear()}-${String(invoiceCount + 1).padStart(3, "0")}`;
 
   return (
     <AppLayout>
@@ -299,7 +317,7 @@ const Dashboard = () => {
                           variant="outline"
                           size="sm"
                           className="h-7 text-xs ml-1"
-                          onClick={() => console.log("Fatura oluştur:", p.name)}
+                          onClick={(e) => { e.stopPropagation(); setInvoiceModal(p); }}
                         >
                           <FileText className="h-3 w-3 mr-1" />
                           Fatura
@@ -327,6 +345,44 @@ const Dashboard = () => {
             </Card>
           ))}
         </div>
+
+        {/* Invoice Modal */}
+        <Dialog open={!!invoiceModal} onOpenChange={(open) => !open && setInvoiceModal(null)}>
+          <DialogContent className="sm:max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Fatura Oluştur</DialogTitle>
+            </DialogHeader>
+            {invoiceModal && (
+              <div className="space-y-4">
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Fatura No</span>
+                    <span className="font-mono font-medium text-foreground">{generateInvoiceNo()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Müşteri</span>
+                    <span className="font-medium text-foreground">{invoiceModal.client}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Proje</span>
+                    <span className="font-medium text-foreground">{invoiceModal.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Tutar</span>
+                    <span className="font-semibold text-foreground">
+                      {invoiceModal.currency === "USD" ? "$" : invoiceModal.currency === "EUR" ? "€" : "₺"}
+                      {fmt(invoiceModal.budget)}
+                    </span>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="ghost" onClick={() => setInvoiceModal(null)}>İptal</Button>
+                  <Button onClick={() => handleInvoice(invoiceModal)}>Faturayı Onayla</Button>
+                </DialogFooter>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   );
