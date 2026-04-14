@@ -298,8 +298,14 @@ const Dashboard = () => {
               <p className="text-5xl md:text-6xl font-bold mt-3 tracking-tight">
                 ₺{fmt(toplamKazanc)}
               </p>
-              {paidForeignSubtitle && (
-                <p className="text-sm opacity-75 mt-2">{paidForeignSubtitle}</p>
+              {paidForeignDetails.length > 0 && (
+                <div className="mt-2 space-y-0.5">
+                  {paidForeignDetails.map((d, i) => (
+                    <p key={i} className="text-sm opacity-75">
+                      {d.label} {d.tryEquiv && <span className="opacity-80">{d.tryEquiv}</span>} dahil
+                    </p>
+                  ))}
+                </div>
               )}
               {foreignSubtitle && (
                 <p className="text-sm opacity-75 mt-1">{foreignSubtitle}</p>
